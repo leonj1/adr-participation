@@ -1,5 +1,5 @@
 # Use an official Node runtime as the base image
-FROM node:14
+FROM node:14 as build
 
 # Set the working directory in the container
 WORKDIR /app
@@ -16,8 +16,14 @@ COPY . .
 # Build the app
 RUN npm run build
 
-# Expose the port the app runs on
-EXPOSE 5000
+# Use Nginx to serve the static files
+FROM nginx:alpine
 
-# Define the command to run the app
-CMD ["npm", "run", "serve"]
+# Copy the build output to replace the default nginx contents.
+COPY --from=build /app/dist /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"]
