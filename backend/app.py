@@ -124,6 +124,24 @@ async def get_total_merge_requests_endpoint():
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
+@app.get("/api/open-merge-requests-count")
+async def get_open_merge_requests_count():
+    """
+    Get the count of open merge requests for the repository
+    """
+    try:
+        project_id = get_project_id()
+        open_mrs_count = get_open_merge_requests_count(project_id)
+        return {"open_merge_requests_count": open_mrs_count}
+    except Exception as error:
+        logger.error(f"Error in get_open_merge_requests_count: {str(error)}")
+        if 'Unauthorized' in str(error):
+            raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
+        elif 'Project not found' in str(error):
+            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 9002))

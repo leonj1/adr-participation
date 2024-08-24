@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton, Box } from '@material-ui/core';
+import Alert from '@material-ui/lab/Alert';
 import MenuIcon from '@material-ui/icons/Menu';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import MergeRequestTable from './components/MergeRequestTable';
@@ -17,9 +18,12 @@ function App() {
   const [maxAge, setMaxAge] = useState(30);
   const [repoUrl, setRepoUrl] = useState('');
   const [isLeftPaneOpen, setIsLeftPaneOpen] = useState(true);
+  const [openMRsCount, setOpenMRsCount] = useState(null);
+  const [openMRsError, setOpenMRsError] = useState(null);
 
   useEffect(() => {
     fetchRepoUrl();
+    fetchOpenMRsCount();
   }, []);
 
   const fetchRepoUrl = async () => {
@@ -65,6 +69,17 @@ function App() {
     setIsLeftPaneOpen(!isLeftPaneOpen);
   };
 
+  const fetchOpenMRsCount = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/open-merge-requests-count`);
+      setOpenMRsCount(response.data.open_merge_requests_count);
+      setOpenMRsError(null);
+    } catch (error) {
+      console.error('Error fetching open MRs count:', error);
+      setOpenMRsError('Failed to fetch open merge requests count');
+    }
+  };
+
   return (
     <Router>
       <AppBar position="fixed">
@@ -93,6 +108,15 @@ function App() {
             <Typography variant="h6" component="h2" gutterBottom>
               REPO: {repoUrl}
             </Typography>
+            {openMRsError ? (
+              <Alert severity="error" style={{ marginBottom: '20px' }}>{openMRsError}</Alert>
+            ) : openMRsCount !== null ? (
+              <Typography variant="h6" component="h3" gutterBottom>
+                Open Merge Requests: {openMRsCount}
+              </Typography>
+            ) : (
+              <CircularProgress size={24} style={{ marginBottom: '20px' }} />
+            )}
             <TextField
               type="number"
               label="Total MRs"
