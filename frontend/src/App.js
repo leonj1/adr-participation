@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton, Box } from '@material-ui/core';
-import Alert from '@material-ui/lab/Alert';
+import { Alert } from '@material-ui/lab';
 import MenuIcon from '@material-ui/icons/Menu';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import MergeRequestTable from './components/MergeRequestTable';
