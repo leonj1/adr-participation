@@ -2,19 +2,19 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
-// Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'dist')));
+// Log all requests
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
 
 // Health check route
 app.get('/health', (req, res) => {
   res.json({ status: 'OK' });
 });
 
-// Log all requests
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
+// Serve static files from the React app
+app.use(express.static(path.join(__dirname, 'dist')));
 
 // The "catchall" handler: for any request that doesn't
 // match one above, send back React's index.html file.
