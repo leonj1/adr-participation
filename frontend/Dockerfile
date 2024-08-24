@@ -13,6 +13,10 @@ RUN npm install
 # Copy the rest of the application code
 COPY . .
 
+# Set the REACT_APP_BACKEND_URL environment variable
+ARG REACT_APP_BACKEND_URL
+ENV REACT_APP_BACKEND_URL=$REACT_APP_BACKEND_URL
+
 # Build the app
 RUN npm run build
 

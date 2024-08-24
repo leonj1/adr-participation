@@ -3,7 +3,7 @@ import { Container, Typography, CircularProgress, Button } from '@material-ui/co
 import MergeRequestList from './components/MergeRequestList';
 import axios from 'axios';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:9001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
 function App() {
   const [mergeRequests, setMergeRequests] = useState([]);
