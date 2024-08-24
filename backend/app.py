@@ -41,37 +41,37 @@ async def root():
 from fastapi import Query
 
 @app.get("/api/merge-requests")
-async def get_merge_requests(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1)):
+async def get_merge_requests(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1), repository_url: str = Query(...)):
     """
     Get merge requests
     """
     try:
-        merge_requests = scan_gitlab_repository(total, max_age)
+        merge_requests = scan_gitlab_repository(total, max_age, repository_url)
         return merge_requests
     except Exception as error:
         logger.error(f"Error in get_merge_requests: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+            raise HTTPException(status_code=404, detail="Project not found. Please check your repository URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/merge-requests-with-participants")
-async def get_merge_requests_participants(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1)):
+async def get_merge_requests_participants(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1), repository_url: str = Query(...)):
     """
     Get merge requests with their participants
     """
     try:
-        project_id = get_project_id()
-        merge_requests = get_merge_requests_with_participants(project_id, total, max_age)
+        project_id = get_project_id(repository_url)
+        merge_requests = get_merge_requests_with_participants(project_id, total, max_age, repository_url)
         return merge_requests
     except Exception as error:
         logger.error(f"Error in get_merge_requests_participants: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+            raise HTTPException(status_code=404, detail="Project not found. Please check your repository URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
@@ -87,32 +87,44 @@ async def get_repository_url():
         logger.error(f"Error in get_repository_url: {str(error)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
+@app.post("/api/set-repo-url")
+async def set_repository_url(repo_url: str = Body(..., embed=True)):
+    """
+    Set the repository URL
+    """
+    try:
+        set_repo_url(repo_url)
+        return {"message": "Repository URL set successfully"}
+    except Exception as error:
+        logger.error(f"Error in set_repository_url: {str(error)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
 @app.get("/api/contributors")
-async def get_contributors():
+async def get_contributors(repository_url: str = Query(...)):
     """
     Get all contributors with participation details
     """
     try:
-        project_id = get_project_id()
-        contributors, total_time = get_all_contributors(project_id)
+        project_id = get_project_id(repository_url)
+        contributors, total_time = get_all_contributors(project_id, repository_url)
         return {"contributors": contributors, "estimated_time": total_time}
     except Exception as error:
         logger.error(f"Error in get_contributors: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+            raise HTTPException(status_code=404, detail="Project not found. Please check your repository URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/total-merge-requests")
-async def get_total_merge_requests_endpoint():
+async def get_total_merge_requests_endpoint(repository_url: str = Query(...)):
     """
     Get the total number of merge requests for the repository
     """
     try:
-        project_id = get_project_id()
-        total_mrs = get_total_merge_requests(project_id)
+        project_id = get_project_id(repository_url)
+        total_mrs = get_total_merge_requests(project_id, repository_url)
         estimated_time = total_mrs * 1.5  # 1.5 seconds per MR
         return {"total_merge_requests": total_mrs, "estimated_time": estimated_time}
     except Exception as error:
@@ -120,25 +132,25 @@ async def get_total_merge_requests_endpoint():
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+            raise HTTPException(status_code=404, detail="Project not found. Please check your repository URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/open-merge-requests-count")
-async def get_open_merge_requests_count_endpoint():
+async def get_open_merge_requests_count_endpoint(repository_url: str = Query(...)):
     """
     Get the count of open merge requests for the repository
     """
     try:
-        project_id = get_project_id()
-        open_mrs_count = get_open_merge_requests_count(project_id)
+        project_id = get_project_id(repository_url)
+        open_mrs_count = get_open_merge_requests_count(project_id, repository_url)
         return {"open_merge_requests_count": open_mrs_count}
     except Exception as error:
         logger.error(f"Error in get_open_merge_requests_count: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+            raise HTTPException(status_code=404, detail="Project not found. Please check your repository URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 

@@ -17,6 +17,7 @@ function App() {
   const [totalMRs, setTotalMRs] = useState(10);
   const [maxAge, setMaxAge] = useState(30);
   const [repoUrl, setRepoUrl] = useState('');
+  const [newRepoUrl, setNewRepoUrl] = useState('');
   const [isLeftPaneOpen, setIsLeftPaneOpen] = useState(true);
   const [openMRsCount, setOpenMRsCount] = useState(null);
   const [openMRsError, setOpenMRsError] = useState(null);
@@ -30,8 +31,19 @@ function App() {
     try {
       const response = await axios.get(`${BACKEND_URL}/api/repo-url`);
       setRepoUrl(response.data.repo_url);
+      setNewRepoUrl(response.data.repo_url);
     } catch (error) {
       console.error('Error fetching repository URL:', error);
+    }
+  };
+
+  const setRepositoryUrl = async () => {
+    try {
+      await axios.post(`${BACKEND_URL}/api/set-repo-url`, { repo_url: newRepoUrl });
+      setRepoUrl(newRepoUrl);
+      fetchOpenMRsCount();
+    } catch (error) {
+      console.error('Error setting repository URL:', error);
     }
   };
 
@@ -39,7 +51,7 @@ function App() {
     setLoading(true);
     try {
       const response = await axios.get(`${BACKEND_URL}/api/merge-requests`, {
-        params: { total: totalMRs, max_age: maxAge }
+        params: { total: totalMRs, max_age: maxAge, repository_url: repoUrl }
       });
       const sortedMergeRequests = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setMergeRequests(sortedMergeRequests);
@@ -54,7 +66,7 @@ function App() {
     setParticipantsLoading(true);
     try {
       const response = await axios.get(`${BACKEND_URL}/api/merge-requests-with-participants`, {
-        params: { total: totalMRs, max_age: maxAge }
+        params: { total: totalMRs, max_age: maxAge, repository_url: repoUrl }
       });
       const sortedMergeRequests = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
       setMergeRequests(sortedMergeRequests);
@@ -71,7 +83,9 @@ function App() {
 
   const fetchOpenMRsCount = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/open-merge-requests-count`);
+      const response = await axios.get(`${BACKEND_URL}/api/open-merge-requests-count`, {
+        params: { repository_url: repoUrl }
+      });
       setOpenMRsCount(response.data.open_merge_requests_count);
       setOpenMRsError(null);
     } catch (error) {
@@ -105,8 +119,23 @@ function App() {
             <Typography variant="h4" component="h1" gutterBottom>
               GitLab Merge Request Scanner
             </Typography>
+            <Box display="flex" alignItems="center" mb={2}>
+              <TextField
+                label="Repository URL"
+                value={newRepoUrl}
+                onChange={(e) => setNewRepoUrl(e.target.value)}
+                style={{ marginRight: '10px', flexGrow: 1 }}
+              />
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={setRepositoryUrl}
+              >
+                Set
+              </Button>
+            </Box>
             <Typography variant="h6" component="h2" gutterBottom>
-              REPO: {repoUrl}
+              Current REPO: {repoUrl}
             </Typography>
             {openMRsError ? (
               <Alert severity="error" style={{ marginBottom: '20px' }}>{openMRsError}</Alert>
@@ -153,7 +182,7 @@ function App() {
             )}
           </Route>
           <Route path="/contributors">
-            <Contributors />
+            <Contributors repoUrl={repoUrl} />
           </Route>
         </Switch>
       </Container>
