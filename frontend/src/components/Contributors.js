@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button, Typography, LinearProgress, Paper, Grid, CircularProgress } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
@@ -70,25 +70,6 @@ function Contributors({ repoUrl }) {
     }
   };
 
-  useEffect(() => {
-    fetchTotalMRs();
-  }, []);
-
-  useEffect(() => {
-    let timer;
-    if (loading && remainingTime > 0) {
-      const startTime = Date.now();
-      const totalTime = estimatedTime * 1000; // Convert to milliseconds
-      timer = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
-        const remaining = Math.max(0, totalTime - elapsedTime);
-        setRemainingTime(Math.ceil(remaining / 1000));
-        setProgress((elapsedTime / totalTime) * 100);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [loading, estimatedTime]);
-
   const formatTime = (seconds) => {
     const duration = intervalToDuration({ start: 0, end: seconds * 1000 });
     return formatDuration(duration, { format: ['hours', 'minutes', 'seconds'] });
@@ -150,10 +131,6 @@ function Contributors({ repoUrl }) {
     setOpenedMRsChart(chartData);
   };
 
-  useEffect(() => {
-    fetchContributors();
-  }, []);
-
   const options = {
     responsive: true,
     plugins: {
@@ -179,9 +156,16 @@ function Contributors({ repoUrl }) {
       <Typography variant="h4" component="h2" gutterBottom>
         Contributors
       </Typography>
-      {fetchingMRs ? (
-        <CircularProgress />
-      ) : (
+      <Button 
+        variant="contained" 
+        color="primary" 
+        onClick={fetchTotalMRs}
+        disabled={fetchingMRs || loading}
+        style={{ marginBottom: '20px' }}
+      >
+        {fetchingMRs ? 'Fetching MRs...' : 'Fetch Total MRs'}
+      </Button>
+      {totalMRs > 0 && (
         <>
           <Typography variant="body1" gutterBottom>
             Total Merge Requests: {totalMRs}
@@ -194,7 +178,7 @@ function Contributors({ repoUrl }) {
             color="primary" 
             onClick={fetchContributors}
             disabled={loading}
-            style={{ marginBottom: '20px' }}
+            style={{ marginBottom: '20px', marginLeft: '10px' }}
           >
             {loading ? 'Loading...' : 'Fetch Contributors'}
           </Button>
