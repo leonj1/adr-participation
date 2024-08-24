@@ -34,7 +34,7 @@ module.exports = {
   devServer: {
     contentBase: path.join(__dirname, 'build'),
     compress: true,
-    port: 6000,
+    port: 9001,
     historyApiFallback: true,
   },
 };
