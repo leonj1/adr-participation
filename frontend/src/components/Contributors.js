@@ -82,19 +82,12 @@ function Contributors() {
     return formatDuration(duration, { format: ['hours', 'minutes', 'seconds'] });
   };
 
-  const prepareChartData = (contributorsData) => {
-    prepareTotalContributions(contributorsData);
-    prepareReactionsChart(contributorsData);
-    prepareCommentsChart(contributorsData);
-    prepareCommitsChart(contributorsData);
-    prepareOpenedMRsChart(contributorsData);
-  };
-
-  const prepareChartData = (contributorsData, key, label, color) => {
-    const filteredData = contributorsData.filter(c => c[key] > 0);
-    const sortedData = [...filteredData].sort((a, b) => b[key] - a[key]);
+  const prepareChartData = (contributorsData, keyOrFunction, label, color) => {
+    const getValue = typeof keyOrFunction === 'function' ? keyOrFunction : c => c[keyOrFunction];
+    const filteredData = contributorsData.filter(c => getValue(c) > 0);
+    const sortedData = [...filteredData].sort((a, b) => getValue(b) - getValue(a));
     const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c[key]);
+    const data = sortedData.map(getValue);
     const maxValue = Math.max(...data);
 
     return {
@@ -108,42 +101,33 @@ function Contributors() {
   };
 
   const prepareTotalContributions = (contributorsData) => {
-    const filteredData = contributorsData.filter(c => 
-      c.opened + c.committed + c.commented + c.reacted > 0
+    const chartData = prepareChartData(
+      contributorsData,
+      c => c.opened + c.committed + c.commented + c.reacted,
+      'Total Contributions',
+      'rgba(75, 192, 192, '
     );
-    const sortedData = filteredData.map(c => ({
-      username: c.username,
-      total: c.opened + c.committed + c.commented + c.reacted
-    })).sort((a, b) => b.total - a.total);
-
-    const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.total);
-    const maxValue = Math.max(...data);
-
-    setTotalContributions({
-      labels,
-      datasets: [{
-        label: 'Total Contributions',
-        data,
-        backgroundColor: data.map(value => `rgba(75, 192, 192, ${value / maxValue})`),
-      }]
-    });
+    setTotalContributions(chartData);
   };
 
   const prepareReactionsChart = (contributorsData) => {
-    setReactionsChart(prepareChartData(contributorsData, 'reacted', 'Reactions', 'rgba(255, 206, 86, '));
+    const chartData = prepareChartData(contributorsData, 'reacted', 'Reactions', 'rgba(255, 206, 86, ');
+    setReactionsChart(chartData);
   };
 
   const prepareCommentsChart = (contributorsData) => {
-    setCommentsChart(prepareChartData(contributorsData, 'commented', 'Comments', 'rgba(54, 162, 235, '));
+    const chartData = prepareChartData(contributorsData, 'commented', 'Comments', 'rgba(54, 162, 235, ');
+    setCommentsChart(chartData);
   };
 
   const prepareCommitsChart = (contributorsData) => {
-    setCommitsChart(prepareChartData(contributorsData, 'committed', 'Commits', 'rgba(255, 99, 132, '));
+    const chartData = prepareChartData(contributorsData, 'committed', 'Commits', 'rgba(255, 99, 132, ');
+    setCommitsChart(chartData);
   };
 
   const prepareOpenedMRsChart = (contributorsData) => {
-    setOpenedMRsChart(prepareChartData(contributorsData, 'opened', 'Opened MRs', 'rgba(153, 102, 255, '));
+    const chartData = prepareChartData(contributorsData, 'opened', 'Opened MRs', 'rgba(153, 102, 255, ');
+    setOpenedMRsChart(chartData);
   };
 
   useEffect(() => {
