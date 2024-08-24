@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors, get_total_merge_requests
 
 # Set up logging
 logging.basicConfig(
@@ -106,16 +106,16 @@ async def get_contributors():
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/total-merge-requests")
-async def get_total_merge_requests():
+async def get_total_merge_requests_endpoint():
     """
     Get the total number of merge requests for the repository
     """
     try:
         project_id = get_project_id()
-        total_mrs = gitlab_scanner.get_total_merge_requests(project_id)
+        total_mrs = get_total_merge_requests(project_id)
         return {"total_merge_requests": total_mrs}
     except Exception as error:
-        logger.error(f"Error in get_total_merge_requests: {str(error)}")
+        logger.error(f"Error in get_total_merge_requests_endpoint: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
