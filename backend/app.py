@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import scan_gitlab_repository, REPOSITORY_URL, GITLAB_TOKEN, get_project_id, get_merge_requests_with_participants
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants
 
 # Set up logging
 logging.basicConfig(
@@ -31,6 +31,13 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+@app.get("/")
+async def root():
+    """
+    Root endpoint
+    """
+    return {"message": "GitLab Merge Request Scanner API is running"}
+
 @app.get("/api/merge-requests")
 async def get_merge_requests():
     """
@@ -40,6 +47,7 @@ async def get_merge_requests():
         merge_requests = scan_gitlab_repository()
         return merge_requests
     except Exception as error:
+        logger.error(f"Error in get_merge_requests: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
@@ -57,6 +65,7 @@ async def get_merge_requests_participants():
         merge_requests = get_merge_requests_with_participants(project_id)
         return merge_requests
     except Exception as error:
+        logger.error(f"Error in get_merge_requests_participants: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
