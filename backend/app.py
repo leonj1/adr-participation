@@ -1,13 +1,26 @@
 import os
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import scan_gitlab_repository
+from gitlab_scanner import scan_gitlab_repository, REPOSITORY_URL, GITLAB_TOKEN
+
+# Set up logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(
     title="GitLab Merge Request Scanner",
     description="API for scanning GitLab merge requests",
     version="1.0.0",
 )
+
+# Log application startup
+logger.info(f"Starting application with REPOSITORY_URL: {REPOSITORY_URL}")
+logger.info(f"GitLab token length: {len(GITLAB_TOKEN) if GITLAB_TOKEN else 0}")
 
 # Add CORS middleware
 app.add_middleware(
