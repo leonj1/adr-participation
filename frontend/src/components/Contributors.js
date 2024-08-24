@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
+import React, { useState } from 'react';
+import { Button, Typography, LinearProgress, Paper, Grid, CircularProgress } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
 import { formatDuration, intervalToDuration } from 'date-fns';
@@ -36,24 +36,28 @@ function Contributors({ repoUrl }) {
   const [estimatedTime, setEstimatedTime] = useState(0);
   const [remainingTime, setRemainingTime] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [fetchingMRs, setFetchingMRs] = useState(false);
 
   const fetchTotalMRs = async () => {
+    setFetchingMRs(true);
     try {
       const response = await axios.get(`${BACKEND_URL}/api/total-merge-requests`, {
         params: { repository_url: repoUrl }
       });
       setTotalMRs(response.data.total_merge_requests);
-      setEstimatedTime(response.data.estimated_time);
-      setRemainingTime(response.data.estimated_time);
+      const estimatedSeconds = response.data.total_merge_requests * 1.5;
+      setEstimatedTime(estimatedSeconds);
+      setRemainingTime(estimatedSeconds);
     } catch (error) {
       console.error('Error fetching total MRs:', error);
+    } finally {
+      setFetchingMRs(false);
     }
   };
 
   const fetchContributors = async () => {
     setLoading(true);
     try {
-      await fetchTotalMRs();
       const response = await axios.get(`${BACKEND_URL}/api/contributors`, {
         params: { repository_url: repoUrl }
       });
@@ -65,21 +69,6 @@ function Contributors({ repoUrl }) {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    let timer;
-    if (loading && remainingTime > 0) {
-      const startTime = Date.now();
-      const totalTime = estimatedTime * 1000; // Convert to milliseconds
-      timer = setInterval(() => {
-        const elapsedTime = Date.now() - startTime;
-        const remaining = Math.max(0, totalTime - elapsedTime);
-        setRemainingTime(Math.ceil(remaining / 1000));
-        setProgress((elapsedTime / totalTime) * 100);
-      }, 1000);
-    }
-    return () => clearInterval(timer);
-  }, [loading, estimatedTime]);
 
   const formatTime = (seconds) => {
     const duration = intervalToDuration({ start: 0, end: seconds * 1000 });
@@ -142,10 +131,6 @@ function Contributors({ repoUrl }) {
     setOpenedMRsChart(chartData);
   };
 
-  useEffect(() => {
-    fetchContributors();
-  }, []);
-
   const options = {
     responsive: true,
     plugins: {
@@ -174,12 +159,31 @@ function Contributors({ repoUrl }) {
       <Button 
         variant="contained" 
         color="primary" 
-        onClick={fetchContributors}
-        disabled={loading}
+        onClick={fetchTotalMRs}
+        disabled={fetchingMRs || loading}
         style={{ marginBottom: '20px' }}
       >
-        {loading ? 'Loading...' : 'Refresh Contributors'}
+        {fetchingMRs ? 'Fetching MRs...' : 'Estimate Processing Time'}
       </Button>
+      {totalMRs > 0 && (
+        <>
+          <Typography variant="body1" gutterBottom>
+            Total Merge Requests: {totalMRs}
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Estimated processing time: {formatTime(estimatedTime)}
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={fetchContributors}
+            disabled={loading}
+            style={{ marginBottom: '20px', marginLeft: '10px' }}
+          >
+            {loading ? 'Loading...' : 'Fetch Contributors'}
+          </Button>
+        </>
+      )}
       {loading && (
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <Typography variant="body1" style={{ marginBottom: '10px' }}>
