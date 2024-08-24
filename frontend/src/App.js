@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
-import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import MergeRequestTable from './components/MergeRequestTable';
 import Contributors from './components/Contributors';
 import LeftPane from './components/LeftPane';
@@ -75,6 +75,9 @@ function App() {
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             GitLab Merge Request Scanner
           </Typography>
+          <Button color="inherit" component={Link} to="/contributors">
+            Contributors
+          </Button>
         </Toolbar>
       </AppBar>
       <LeftPane isOpen={isLeftPaneOpen} toggleDrawer={toggleLeftPane} />
