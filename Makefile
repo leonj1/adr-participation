@@ -1,4 +1,4 @@
-.PHONY: build run
+.PHONY: build run down stop
 
 # Default target
 .DEFAULT_GOAL := build
@@ -10,3 +10,7 @@ build:
 # Run the application
 run:
 	docker-compose up -d
+
+# Stop and remove containers
+down stop:
+	docker-compose down
