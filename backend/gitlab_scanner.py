@@ -214,6 +214,27 @@ def get_merge_requests_with_participants(project_id, total, max_age):
 
 import time
 
+def get_total_merge_requests(project_id):
+    """
+    Fetches the total number of merge requests for the project
+    :param project_id: ID of the GitLab project
+    :return: Total number of merge requests
+    """
+    logger.info(f"Fetching total number of merge requests for project ID: {project_id}")
+    try:
+        response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
+            params={'state': 'all', 'per_page': 1}
+        )
+        response.raise_for_status()
+        total_mrs = int(response.headers.get('X-Total', 0))
+        logger.info(f"Successfully fetched total number of merge requests: {total_mrs}")
+        return total_mrs
+    except requests.exceptions.RequestException as error:
+        logger.error(f"Error fetching total number of merge requests: {str(error)}")
+        raise
+
 def get_all_contributors(project_id):
     """
     Fetches all contributors from merge requests with their participation details
@@ -224,18 +245,10 @@ def get_all_contributors(project_id):
     try:
         contributors = {}
         page = 1
-        total_mrs = 0
         total_time = 0
         start_time = time.time()
 
-        # First, get the total number of merge requests
-        response = requests.get(
-            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
-            headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
-            params={'state': 'all', 'per_page': 1}
-        )
-        response.raise_for_status()
-        total_mrs = int(response.headers.get('X-Total', 0))
+        total_mrs = get_total_merge_requests(project_id)
         
         while True:
             response = requests.get(
