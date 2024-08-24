@@ -94,8 +94,8 @@ async def get_contributors():
     """
     try:
         project_id = get_project_id()
-        contributors = get_all_contributors(project_id)
-        return {"contributors": contributors}
+        contributors, total_time = get_all_contributors(project_id)
+        return {"contributors": contributors, "estimated_time": total_time}
     except Exception as error:
         logger.error(f"Error in get_contributors: {str(error)}")
         if 'Unauthorized' in str(error):

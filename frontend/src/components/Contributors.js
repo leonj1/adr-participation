@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, CircularProgress, Paper, Grid } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
+import { formatDistanceToNow } from 'date-fns';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -31,6 +32,8 @@ function Contributors() {
   const [commentsChart, setCommentsChart] = useState(null);
   const [commitsChart, setCommitsChart] = useState(null);
   const [openedMRsChart, setOpenedMRsChart] = useState(null);
+  const [estimatedTime, setEstimatedTime] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(null);
 
   const fetchContributors = async () => {
     setLoading(true);
@@ -38,12 +41,24 @@ function Contributors() {
       const response = await axios.get(`${BACKEND_URL}/api/contributors`);
       setContributors(response.data.contributors);
       prepareChartData(response.data.contributors);
+      setEstimatedTime(response.data.estimated_time);
+      setRemainingTime(response.data.estimated_time);
     } catch (error) {
       console.error('Error fetching contributors:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let timer;
+    if (loading && remainingTime > 0) {
+      timer = setInterval(() => {
+        setRemainingTime((prevTime) => Math.max(0, prevTime - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [loading, remainingTime]);
 
   const prepareChartData = (contributorsData) => {
     prepareTotalContributions(contributorsData);
@@ -175,7 +190,14 @@ function Contributors() {
       >
         {loading ? 'Loading...' : 'Refresh Contributors'}
       </Button>
-      {loading && <CircularProgress />}
+      {loading && (
+        <div>
+          <CircularProgress />
+          <Typography variant="body1" style={{ marginTop: '10px' }}>
+            Estimated time remaining: {formatDistanceToNow(new Date(Date.now() + remainingTime * 1000), { addSuffix: true })}
+          </Typography>
+        </div>
+      )}
       {totalContributions && (
         <Grid container spacing={3}>
           <Grid item xs={12}>

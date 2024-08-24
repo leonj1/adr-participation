@@ -212,16 +212,31 @@ def get_merge_requests_with_participants(project_id, total, max_age):
         logger.error(f'Error fetching merge requests with participants: {error}')
         raise
 
+import time
+
 def get_all_contributors(project_id):
     """
     Fetches all contributors from merge requests with their participation details
     :param project_id: ID of the GitLab project
-    :return: List of contributors with participation details
+    :return: Tuple of (List of contributors with participation details, Estimated total time in seconds)
     """
     logger.info(f"Fetching all contributors with participation details for project ID: {project_id}")
     try:
         contributors = {}
         page = 1
+        total_mrs = 0
+        total_time = 0
+        start_time = time.time()
+
+        # First, get the total number of merge requests
+        response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
+            params={'state': 'all', 'per_page': 1}
+        )
+        response.raise_for_status()
+        total_mrs = int(response.headers.get('X-Total', 0))
+        
         while True:
             response = requests.get(
                 f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
@@ -234,6 +249,9 @@ def get_all_contributors(project_id):
                 break
 
             for mr in merge_requests:
+                if page == 1 and merge_requests.index(mr) == 0:
+                    # Measure time for processing one MR
+                    mr_start_time = time.time()
                 created_at = datetime.fromisoformat(mr['created_at'].replace('Z', '+00:00'))
                 author = mr['author']['username']
                 if author not in contributors:
@@ -272,8 +290,16 @@ def get_all_contributors(project_id):
 
             page += 1
 
+                if page == 1 and merge_requests.index(mr) == 0:
+                    # Calculate time taken for one MR
+                    time_per_mr = time.time() - mr_start_time
+                    # Estimate total time
+                    total_time = time_per_mr * total_mrs
+
+            page += 1
+
         logger.info(f"Successfully fetched participation details for {len(contributors)} contributors")
-        return [{'username': username, **data} for username, data in contributors.items()]
+        return [{'username': username, **data} for username, data in contributors.items()], total_time
     except Exception as error:
         logger.error(f'Error fetching contributors with participation details: {error}')
         raise
