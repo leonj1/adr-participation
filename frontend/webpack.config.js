@@ -5,7 +5,7 @@ module.exports = {
   entry: './src/index.js',
   output: {
     path: path.resolve(__dirname, 'build'),
-    filename: 'bundle.js',
+    filename: 'static/js/main.js',
     publicPath: '/',
   },
   module: {
@@ -32,7 +32,7 @@ module.exports = {
     }),
   ],
   devServer: {
-    contentBase: path.join(__dirname, 'build'),
+    static: path.join(__dirname, 'build'),
     compress: true,
     port: 9001,
     historyApiFallback: true,
