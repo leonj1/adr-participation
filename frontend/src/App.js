@@ -128,8 +128,7 @@ function App() {
               <MergeRequestTable mergeRequests={mergeRequests} />
             ) : (
               <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
-                <img src="/nothing-to-see.jpg" alt="Nothing to see here" style={{ maxWidth: '100%', height: 'auto' }} />
-                <Typography variant="h6" style={{ marginTop: '20px' }}>
+                <Typography variant="h6">
                   No open merge requests. Time for a coffee break!
                 </Typography>
               </Box>
