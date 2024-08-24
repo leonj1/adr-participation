@@ -163,7 +163,7 @@ function Contributors({ repoUrl }) {
         disabled={fetchingMRs || loading}
         style={{ marginBottom: '20px' }}
       >
-        {fetchingMRs ? 'Fetching MRs...' : 'Fetch Total MRs'}
+        {fetchingMRs ? 'Fetching MRs...' : 'Estimate Processing Time'}
       </Button>
       {totalMRs > 0 && (
         <>
