@@ -288,8 +288,6 @@ def get_all_contributors(project_id):
                             contributors[reactor]['reacted'] += 1
                             contributors[reactor]['timeline'].append({'date': comment_date, 'action': 'reacted'})
 
-            page += 1
-
                 if page == 1 and merge_requests.index(mr) == 0:
                     # Calculate time taken for one MR
                     time_per_mr = time.time() - mr_start_time
