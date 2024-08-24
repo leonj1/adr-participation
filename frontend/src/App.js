@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, CircularProgress, Button, TextField } from '@material-ui/core';
+import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
 import MergeRequestTable from './components/MergeRequestTable';
 import LeftPane from './components/LeftPane';
 import axios from 'axios';
@@ -64,8 +65,18 @@ function App() {
 
   return (
     <>
+      <AppBar position="fixed">
+        <Toolbar>
+          <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleLeftPane}>
+            <MenuIcon />
+          </IconButton>
+          <Typography variant="h6" style={{ flexGrow: 1 }}>
+            GitLab Merge Request Scanner
+          </Typography>
+        </Toolbar>
+      </AppBar>
       <LeftPane isOpen={isLeftPaneOpen} toggleDrawer={toggleLeftPane} />
-      <Container style={{ marginTop: '60px', marginLeft: isLeftPaneOpen ? '240px' : '0', transition: 'margin-left 0.3s' }}>
+      <Container style={{ marginTop: '80px', marginLeft: isLeftPaneOpen ? '240px' : '0', transition: 'margin-left 0.3s' }}>
         <Typography variant="h4" component="h1" gutterBottom>
           GitLab Merge Request Scanner
         </Typography>
