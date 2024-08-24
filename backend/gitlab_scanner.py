@@ -89,8 +89,8 @@ def scan_gitlab_repository(total, max_age, repository_url):
 
     try:
         project_id = get_project_id(repository_url)
-        open_mrs = fetch_merge_requests('opened', project_id, total, max_age, repository_url)
-        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age, repository_url)
+        open_mrs = fetch_merge_requests('opened', project_id, total, max_age)
+        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age)
         all_mrs = open_mrs + closed_mrs
         all_mrs.sort(key=lambda x: x['created_at'], reverse=True)
         total_mrs = min(len(all_mrs), total)
@@ -100,7 +100,7 @@ def scan_gitlab_repository(total, max_age, repository_url):
         logger.error(f'Error scanning GitLab repository: {error}')
         raise
 
-def fetch_merge_requests(state, project_id, limit, max_age):
+def fetch_merge_requests(state, project_id, limit, max_age, repository_url):
     """
     Fetches merge requests from GitLab API
     :param state: State of merge requests to fetch ('opened' or 'closed')
