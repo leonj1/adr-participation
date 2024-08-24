@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton } from '@material-ui/core';
+import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton, Box } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 import { BrowserRouter as Router, Route, Switch, Link } from 'react-router-dom';
 import MergeRequestTable from './components/MergeRequestTable';
@@ -124,8 +124,15 @@ function App() {
             >
               {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
             </Button>
-            {mergeRequests.length > 0 && (
+            {mergeRequests.length > 0 ? (
               <MergeRequestTable mergeRequests={mergeRequests} />
+            ) : (
+              <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
+                <img src="/nothing-to-see.jpg" alt="Nothing to see here" style={{ maxWidth: '100%', height: 'auto' }} />
+                <Typography variant="h6" style={{ marginTop: '20px' }}>
+                  No open merge requests. Time for a coffee break!
+                </Typography>
+              </Box>
             )}
           </Route>
           <Route path="/contributors">
