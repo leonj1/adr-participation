@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, CircularProgress, Paper, Grid } from '@material-ui/core';
+import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
 import { formatDistanceToNow } from 'date-fns';
@@ -33,7 +33,8 @@ function Contributors() {
   const [commitsChart, setCommitsChart] = useState({ labels: [], datasets: [] });
   const [openedMRsChart, setOpenedMRsChart] = useState({ labels: [], datasets: [] });
   const [estimatedTime, setEstimatedTime] = useState(null);
-  const [remainingTime, setRemainingTime] = useState(null);
+  const [remainingTime, setRemainingTime] = useState(0);
+  const [progress, setProgress] = useState(0);
 
   const fetchContributors = async () => {
     setLoading(true);
@@ -53,12 +54,24 @@ function Contributors() {
   useEffect(() => {
     let timer;
     if (loading && remainingTime > 0) {
+      const startTime = Date.now();
+      const totalTime = remainingTime * 1000; // Convert to milliseconds
       timer = setInterval(() => {
-        setRemainingTime((prevTime) => Math.max(0, prevTime - 1));
+        const elapsedTime = Date.now() - startTime;
+        const remaining = Math.max(0, totalTime - elapsedTime);
+        setRemainingTime(Math.ceil(remaining / 1000));
+        setProgress((elapsedTime / totalTime) * 100);
       }, 1000);
     }
     return () => clearInterval(timer);
-  }, [loading, remainingTime]);
+  }, [loading, estimatedTime]);
+
+  const formatTime = (seconds) => {
+    const hours = Math.floor(seconds / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+    const remainingSeconds = seconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+  };
 
   const prepareChartData = (contributorsData) => {
     prepareTotalContributions(contributorsData);
@@ -191,10 +204,10 @@ function Contributors() {
         {loading ? 'Loading...' : 'Refresh Contributors'}
       </Button>
       {loading && (
-        <div>
-          <CircularProgress />
+        <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+          <LinearProgress variant="determinate" value={progress} style={{ height: '10px', borderRadius: '5px' }} />
           <Typography variant="body1" style={{ marginTop: '10px' }}>
-            Estimated time remaining: {formatDistanceToNow(new Date(Date.now() + remainingTime * 1000), { addSuffix: true })}
+            Estimated time remaining: {formatTime(remainingTime)}
           </Typography>
         </div>
       )}
