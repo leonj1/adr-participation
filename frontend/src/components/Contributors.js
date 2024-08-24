@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, formatDuration, intervalToDuration } from 'date-fns';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -32,18 +32,29 @@ function Contributors() {
   const [commentsChart, setCommentsChart] = useState({ labels: [], datasets: [] });
   const [commitsChart, setCommitsChart] = useState({ labels: [], datasets: [] });
   const [openedMRsChart, setOpenedMRsChart] = useState({ labels: [], datasets: [] });
-  const [estimatedTime, setEstimatedTime] = useState(null);
+  const [totalMRs, setTotalMRs] = useState(0);
+  const [estimatedTime, setEstimatedTime] = useState(0);
   const [remainingTime, setRemainingTime] = useState(0);
   const [progress, setProgress] = useState(0);
+
+  const fetchTotalMRs = async () => {
+    try {
+      const response = await axios.get(`${BACKEND_URL}/api/total-merge-requests`);
+      setTotalMRs(response.data.total_merge_requests);
+      setEstimatedTime(response.data.estimated_time);
+      setRemainingTime(response.data.estimated_time);
+    } catch (error) {
+      console.error('Error fetching total MRs:', error);
+    }
+  };
 
   const fetchContributors = async () => {
     setLoading(true);
     try {
+      await fetchTotalMRs();
       const response = await axios.get(`${BACKEND_URL}/api/contributors`);
       setContributors(response.data.contributors);
       prepareChartData(response.data.contributors);
-      setEstimatedTime(response.data.estimated_time);
-      setRemainingTime(response.data.estimated_time);
     } catch (error) {
       console.error('Error fetching contributors:', error);
     } finally {
@@ -55,7 +66,7 @@ function Contributors() {
     let timer;
     if (loading && remainingTime > 0) {
       const startTime = Date.now();
-      const totalTime = remainingTime * 1000; // Convert to milliseconds
+      const totalTime = estimatedTime * 1000; // Convert to milliseconds
       timer = setInterval(() => {
         const elapsedTime = Date.now() - startTime;
         const remaining = Math.max(0, totalTime - elapsedTime);
@@ -67,10 +78,8 @@ function Contributors() {
   }, [loading, estimatedTime]);
 
   const formatTime = (seconds) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const remainingSeconds = seconds % 60;
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
+    const duration = intervalToDuration({ start: 0, end: seconds * 1000 });
+    return formatDuration(duration, { format: ['hours', 'minutes', 'seconds'] });
   };
 
   const prepareChartData = (contributorsData) => {
@@ -205,6 +214,9 @@ function Contributors() {
       </Button>
       {loading && (
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
+          <Typography variant="body1" style={{ marginBottom: '10px' }}>
+            Processing {totalMRs} merge requests...
+          </Typography>
           <LinearProgress variant="determinate" value={progress} style={{ height: '10px', borderRadius: '5px' }} />
           <Typography variant="body1" style={{ marginTop: '10px' }}>
             Estimated time remaining: {formatTime(remainingTime)}

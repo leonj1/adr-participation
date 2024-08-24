@@ -113,7 +113,8 @@ async def get_total_merge_requests_endpoint():
     try:
         project_id = get_project_id()
         total_mrs = get_total_merge_requests(project_id)
-        return {"total_merge_requests": total_mrs}
+        estimated_time = total_mrs * 1.5  # 1.5 seconds per MR
+        return {"total_merge_requests": total_mrs, "estimated_time": estimated_time}
     except Exception as error:
         logger.error(f"Error in get_total_merge_requests_endpoint: {str(error)}")
         if 'Unauthorized' in str(error):
