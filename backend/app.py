@@ -38,13 +38,15 @@ async def root():
     """
     return {"message": "GitLab Merge Request Scanner API is running"}
 
+from fastapi import Query
+
 @app.get("/api/merge-requests")
-async def get_merge_requests():
+async def get_merge_requests(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1)):
     """
-    Get all merge requests
+    Get merge requests
     """
     try:
-        merge_requests = scan_gitlab_repository()
+        merge_requests = scan_gitlab_repository(total, max_age)
         return merge_requests
     except Exception as error:
         logger.error(f"Error in get_merge_requests: {str(error)}")
@@ -56,13 +58,13 @@ async def get_merge_requests():
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/merge-requests-with-participants")
-async def get_merge_requests_participants():
+async def get_merge_requests_participants(total: int = Query(10, ge=1), max_age: int = Query(30, ge=1)):
     """
-    Get all merge requests with their participants
+    Get merge requests with their participants
     """
     try:
         project_id = get_project_id()
-        merge_requests = get_merge_requests_with_participants(project_id)
+        merge_requests = get_merge_requests_with_participants(project_id, total, max_age)
         return merge_requests
     except Exception as error:
         logger.error(f"Error in get_merge_requests_participants: {str(error)}")
