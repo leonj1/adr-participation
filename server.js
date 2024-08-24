@@ -8,11 +8,6 @@ app.use((req, res, next) => {
   next();
 });
 
-// Health check route
-app.get('/health', (req, res) => {
-  res.json({ status: 'OK' });
-});
-
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'dist')));
 
