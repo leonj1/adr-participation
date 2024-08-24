@@ -2,12 +2,13 @@ version: '3.8'
 
 services:
   backend:
+    build: ./backend
     image: gitlab-mr-scanner-backend:latest
     environment:
       - GITLAB_API_URL=${GITLAB_API_URL:-https://gitlab.com/api/v4}
       - GITLAB_TOKEN=${GITLAB_TOKEN}
       - PROJECT_ID=${PROJECT_ID}
-      - BACKEND_PORT=${BACKEND_PORT:-5000}
+      - PORT=${BACKEND_PORT:-5000}
     ports:
       - "${BACKEND_PORT:-5000}:${BACKEND_PORT:-5000}"
 

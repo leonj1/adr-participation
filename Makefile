@@ -5,8 +5,7 @@
 
 # Build Docker images
 build:
-	docker build -t gitlab-mr-scanner-backend:latest ./backend
-	docker-compose build frontend
+	docker-compose build
 
 # Run the application
 run:
