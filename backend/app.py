@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_name
 
 # Set up logging
 logging.basicConfig(
@@ -74,6 +74,18 @@ async def get_merge_requests_participants(total: int = Query(10, ge=1), max_age:
             raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
+@app.get("/api/repo-name")
+async def get_repository_name():
+    """
+    Get the repository name
+    """
+    try:
+        repo_name = get_repo_name()
+        return {"repo_name": repo_name}
+    except Exception as error:
+        logger.error(f"Error in get_repository_name: {str(error)}")
+        raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 if __name__ == "__main__":
     import uvicorn

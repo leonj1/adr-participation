@@ -16,6 +16,23 @@ def get_project_id():
     :raises: Exception if there's an error fetching project details
     """
     logger.info(f"Attempting to get project ID for repository: {REPOSITORY_URL}")
+    return _get_project_details()['id']
+
+def get_repo_name():
+    """
+    Determines the repository name based on the REPOSITORY_URL
+    :return: Repository name
+    :raises: Exception if there's an error fetching project details
+    """
+    logger.info(f"Attempting to get repository name for: {REPOSITORY_URL}")
+    return _get_project_details()['name']
+
+def _get_project_details():
+    """
+    Fetches project details from GitLab API
+    :return: Project details dictionary
+    :raises: Exception if there's an error fetching project details
+    """
     if not REPOSITORY_URL:
         logger.error("REPOSITORY_URL is not set")
         raise Exception('REPOSITORY_URL is not set')
@@ -30,9 +47,9 @@ def get_project_id():
             headers={'PRIVATE-TOKEN': GITLAB_TOKEN}
         )
         response.raise_for_status()
-        project_id = response.json()['id']
-        logger.info(f"Successfully retrieved project ID: {project_id}")
-        return project_id
+        project_details = response.json()
+        logger.info(f"Successfully retrieved project details for: {project_details['name']}")
+        return project_details
     except requests.exceptions.RequestException as error:
         if error.response:
             if error.response.status_code == 401:
@@ -41,7 +58,7 @@ def get_project_id():
             elif error.response.status_code == 404:
                 logger.error("Project not found. Please check your REPOSITORY_URL.")
                 raise Exception('Project not found. Please check your REPOSITORY_URL.')
-        logger.error(f"Error getting project ID: {str(error)}")
+        logger.error(f"Error getting project details: {str(error)}")
         raise
 
 from datetime import datetime, timedelta
