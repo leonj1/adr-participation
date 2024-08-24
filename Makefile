@@ -5,7 +5,8 @@
 
 # Build Docker images
 build:
-	docker-compose build
+	docker build -t gitlab-mr-scanner-backend:latest ./backend
+	docker build -t gitlab-mr-scanner-frontend:latest ./frontend
 
 # Run the application
 run:
@@ -14,3 +15,6 @@ run:
 # Stop and remove containers
 down stop:
 	docker-compose down
+
+# Build and run
+build-and-run: build run
