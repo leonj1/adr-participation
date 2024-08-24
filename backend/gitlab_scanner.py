@@ -95,3 +95,79 @@ def fetch_merge_requests(state, project_id):
                 raise Exception('Project not found. Please check your REPOSITORY_URL.')
         logger.error(f"Error fetching merge requests: {str(error)}")
         raise
+
+def fetch_merge_request_participants(project_id, merge_request_iid):
+    """
+    Fetches participants for a specific merge request
+    :param project_id: ID of the GitLab project
+    :param merge_request_iid: IID of the merge request
+    :return: Set of unique participants
+    """
+    logger.info(f"Fetching participants for merge request {merge_request_iid} in project {project_id}")
+    participants = set()
+
+    try:
+        # Fetch merge request details
+        mr_response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests/{merge_request_iid}',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN}
+        )
+        mr_response.raise_for_status()
+        mr_data = mr_response.json()
+        
+        # Add author
+        participants.add(mr_data['author']['username'])
+
+        # Fetch comments
+        comments_response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests/{merge_request_iid}/notes',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN}
+        )
+        comments_response.raise_for_status()
+        comments = comments_response.json()
+
+        # Add commenters and reactors
+        for comment in comments:
+            participants.add(comment['author']['username'])
+            if 'award_emoji' in comment:
+                for emoji in comment['award_emoji']:
+                    participants.add(emoji['user']['username'])
+
+        # Fetch commits
+        commits_response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests/{merge_request_iid}/commits',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN}
+        )
+        commits_response.raise_for_status()
+        commits = commits_response.json()
+
+        # Add committers
+        for commit in commits:
+            participants.add(commit['author_name'])
+
+        logger.info(f"Successfully fetched {len(participants)} participants for merge request {merge_request_iid}")
+        return list(participants)
+    except requests.exceptions.RequestException as error:
+        logger.error(f"Error fetching participants for merge request {merge_request_iid}: {str(error)}")
+        raise
+
+def get_merge_requests_with_participants(project_id):
+    """
+    Fetches all merge requests with their participants
+    :param project_id: ID of the GitLab project
+    :return: List of merge requests with participants
+    """
+    logger.info(f"Fetching all merge requests with participants for project ID: {project_id}")
+    try:
+        open_mrs = fetch_merge_requests('opened', project_id)
+        closed_mrs = fetch_merge_requests('closed', project_id)
+        all_mrs = open_mrs + closed_mrs
+
+        for mr in all_mrs:
+            mr['participants'] = fetch_merge_request_participants(project_id, mr['iid'])
+
+        logger.info(f"Successfully fetched {len(all_mrs)} merge requests with participants")
+        return all_mrs
+    except Exception as error:
+        logger.error(f'Error fetching merge requests with participants: {error}')
+        raise
