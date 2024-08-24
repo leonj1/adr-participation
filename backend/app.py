@@ -90,7 +90,7 @@ async def get_repository_url():
 @app.get("/api/contributors")
 async def get_contributors():
     """
-    Get all contributors
+    Get all contributors with participation details
     """
     try:
         project_id = get_project_id()

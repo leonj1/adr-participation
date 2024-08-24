@@ -214,13 +214,13 @@ def get_merge_requests_with_participants(project_id, total, max_age):
 
 def get_all_contributors(project_id):
     """
-    Fetches all contributors from merge requests
+    Fetches all contributors from merge requests with their participation details
     :param project_id: ID of the GitLab project
-    :return: List of unique contributors
+    :return: List of contributors with participation details
     """
-    logger.info(f"Fetching all contributors for project ID: {project_id}")
+    logger.info(f"Fetching all contributors with participation details for project ID: {project_id}")
     try:
-        all_contributors = set()
+        contributors = {}
         page = 1
         while True:
             response = requests.get(
@@ -234,14 +234,46 @@ def get_all_contributors(project_id):
                 break
 
             for mr in merge_requests:
-                all_contributors.add(mr['author']['username'])
+                created_at = datetime.fromisoformat(mr['created_at'].replace('Z', '+00:00'))
+                author = mr['author']['username']
+                if author not in contributors:
+                    contributors[author] = {'opened': 0, 'committed': 0, 'commented': 0, 'reacted': 0, 'timeline': []}
+                contributors[author]['opened'] += 1
+                contributors[author]['timeline'].append({'date': created_at, 'action': 'opened'})
+
                 participants = fetch_merge_request_participants(project_id, mr['iid'])
-                all_contributors.update(participants)
+                for participant in participants:
+                    if participant not in contributors:
+                        contributors[participant] = {'opened': 0, 'committed': 0, 'commented': 0, 'reacted': 0, 'timeline': []}
+                    if participant != author:
+                        contributors[participant]['committed'] += 1
+                        contributors[participant]['timeline'].append({'date': created_at, 'action': 'committed'})
+
+                comments_response = requests.get(
+                    f'{GITLAB_API_URL}/projects/{project_id}/merge_requests/{mr["iid"]}/notes',
+                    headers={'PRIVATE-TOKEN': GITLAB_TOKEN}
+                )
+                comments_response.raise_for_status()
+                comments = comments_response.json()
+                for comment in comments:
+                    commenter = comment['author']['username']
+                    comment_date = datetime.fromisoformat(comment['created_at'].replace('Z', '+00:00'))
+                    if commenter not in contributors:
+                        contributors[commenter] = {'opened': 0, 'committed': 0, 'commented': 0, 'reacted': 0, 'timeline': []}
+                    contributors[commenter]['commented'] += 1
+                    contributors[commenter]['timeline'].append({'date': comment_date, 'action': 'commented'})
+                    if 'award_emoji' in comment:
+                        for emoji in comment['award_emoji']:
+                            reactor = emoji['user']['username']
+                            if reactor not in contributors:
+                                contributors[reactor] = {'opened': 0, 'committed': 0, 'commented': 0, 'reacted': 0, 'timeline': []}
+                            contributors[reactor]['reacted'] += 1
+                            contributors[reactor]['timeline'].append({'date': comment_date, 'action': 'reacted'})
 
             page += 1
 
-        logger.info(f"Successfully fetched {len(all_contributors)} contributors")
-        return list(all_contributors)
+        logger.info(f"Successfully fetched participation details for {len(contributors)} contributors")
+        return [{'username': username, **data} for username, data in contributors.items()]
     except Exception as error:
-        logger.error(f'Error fetching all contributors: {error}')
+        logger.error(f'Error fetching contributors with participation details: {error}')
         raise
