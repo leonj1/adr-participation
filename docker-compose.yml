@@ -15,7 +15,7 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     environment:
       - REACT_APP_BACKEND_URL=http://backend:${BACKEND_PORT:-5000}
