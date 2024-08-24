@@ -24,7 +24,7 @@ ChartJS.register(
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 
-function Contributors() {
+function Contributors({ repoUrl }) {
   const [contributors, setContributors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalContributions, setTotalContributions] = useState({ labels: [], datasets: [] });
@@ -39,7 +39,9 @@ function Contributors() {
 
   const fetchTotalMRs = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/total-merge-requests`);
+      const response = await axios.get(`${BACKEND_URL}/api/total-merge-requests`, {
+        params: { repository_url: repoUrl }
+      });
       setTotalMRs(response.data.total_merge_requests);
       setEstimatedTime(response.data.estimated_time);
       setRemainingTime(response.data.estimated_time);
@@ -52,7 +54,9 @@ function Contributors() {
     setLoading(true);
     try {
       await fetchTotalMRs();
-      const response = await axios.get(`${BACKEND_URL}/api/contributors`);
+      const response = await axios.get(`${BACKEND_URL}/api/contributors`, {
+        params: { repository_url: repoUrl }
+      });
       setContributors(response.data.contributors);
       prepareChartData(response.data.contributors);
     } catch (error) {

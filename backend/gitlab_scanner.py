@@ -9,14 +9,15 @@ REPOSITORY_URL = os.environ.get('REPOSITORY_URL')
 
 logger = logging.getLogger(__name__)
 
-def get_project_id():
+def get_project_id(repository_url):
     """
-    Determines the PROJECT_ID based on the REPOSITORY_URL
+    Determines the PROJECT_ID based on the repository_url
+    :param repository_url: URL of the GitLab repository
     :return: PROJECT_ID
     :raises: Exception if there's an error fetching project details
     """
-    logger.info(f"Attempting to get project ID for repository: {REPOSITORY_URL}")
-    return _get_project_details()['id']
+    logger.info(f"Attempting to get project ID for repository: {repository_url}")
+    return _get_project_details(repository_url)['id']
 
 def get_repo_url():
     """
@@ -26,17 +27,27 @@ def get_repo_url():
     logger.info(f"Returning repository URL: {REPOSITORY_URL}")
     return REPOSITORY_URL
 
-def _get_project_details():
+def set_repo_url(new_repo_url):
+    """
+    Sets the REPOSITORY_URL
+    :param new_repo_url: New repository URL to set
+    """
+    global REPOSITORY_URL
+    REPOSITORY_URL = new_repo_url
+    logger.info(f"Set new repository URL: {REPOSITORY_URL}")
+
+def _get_project_details(repository_url):
     """
     Fetches project details from GitLab API
+    :param repository_url: URL of the GitLab repository
     :return: Project details dictionary
     :raises: Exception if there's an error fetching project details
     """
-    if not REPOSITORY_URL:
-        logger.error("REPOSITORY_URL is not set")
-        raise Exception('REPOSITORY_URL is not set')
+    if not repository_url:
+        logger.error("repository_url is not set")
+        raise Exception('repository_url is not set')
 
-    parsed_url = urlparse(REPOSITORY_URL)
+    parsed_url = urlparse(repository_url)
     path = parsed_url.path.strip('/')
     encoded_path = requests.utils.quote(path, safe='')
 
@@ -55,18 +66,19 @@ def _get_project_details():
                 logger.error("Unauthorized. Please check your GitLab token.")
                 raise Exception('Unauthorized. Please check your GitLab token.')
             elif error.response.status_code == 404:
-                logger.error("Project not found. Please check your REPOSITORY_URL.")
-                raise Exception('Project not found. Please check your REPOSITORY_URL.')
+                logger.error("Project not found. Please check your repository URL.")
+                raise Exception('Project not found. Please check your repository URL.')
         logger.error(f"Error getting project details: {str(error)}")
         raise
 
 from datetime import datetime, timedelta
 
-def scan_gitlab_repository(total, max_age):
+def scan_gitlab_repository(total, max_age, repository_url):
     """
     Scans the GitLab repository for merge requests
     :param total: Maximum number of merge requests to fetch
     :param max_age: Maximum age of merge requests in days
+    :param repository_url: URL of the GitLab repository
     :return: List of merge requests
     :raises: Exception if there's an error fetching merge requests
     """
@@ -76,9 +88,9 @@ def scan_gitlab_repository(total, max_age):
         raise Exception('GITLAB_TOKEN is not set')
 
     try:
-        project_id = get_project_id()
-        open_mrs = fetch_merge_requests('opened', project_id, total, max_age)
-        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age)
+        project_id = get_project_id(repository_url)
+        open_mrs = fetch_merge_requests('opened', project_id, total, max_age, repository_url)
+        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age, repository_url)
         all_mrs = open_mrs + closed_mrs
         all_mrs.sort(key=lambda x: x['created_at'], reverse=True)
         total_mrs = min(len(all_mrs), total)
@@ -88,7 +100,7 @@ def scan_gitlab_repository(total, max_age):
         logger.error(f'Error scanning GitLab repository: {error}')
         raise
 
-def fetch_merge_requests(state, project_id, limit, max_age):
+def fetch_merge_requests(state, project_id, limit, max_age, repository_url):
     """
     Fetches merge requests from GitLab API
     :param state: State of merge requests to fetch ('opened' or 'closed')
@@ -191,17 +203,18 @@ def fetch_merge_request_participants(project_id, merge_request_iid):
         logger.error(f"Error fetching participants for merge request {merge_request_iid}: {str(error)}")
         raise
 
-def get_merge_requests_with_participants(project_id, total, max_age):
+def get_merge_requests_with_participants(project_id, total, max_age, repository_url):
     """
     Fetches merge requests with their participants
     :param project_id: ID of the GitLab project
     :param total: Maximum number of merge requests to fetch
     :param max_age: Maximum age of merge requests in days
+    :param repository_url: URL of the GitLab repository
     :return: List of merge requests with participants
     """
     logger.info(f"Fetching merge requests with participants for project ID: {project_id}")
     try:
-        all_mrs = scan_gitlab_repository(total, max_age)
+        all_mrs = scan_gitlab_repository(total, max_age, repository_url)
 
         for mr in all_mrs:
             mr['participants'] = fetch_merge_request_participants(project_id, mr['iid'])
@@ -214,10 +227,11 @@ def get_merge_requests_with_participants(project_id, total, max_age):
 
 import time
 
-def get_total_merge_requests(project_id):
+def get_total_merge_requests(project_id, repository_url):
     """
     Fetches the total number of merge requests for the project
     :param project_id: ID of the GitLab project
+    :param repository_url: URL of the GitLab repository
     :return: Total number of merge requests
     """
     logger.info(f"Fetching total number of merge requests for project ID: {project_id}")
@@ -235,10 +249,11 @@ def get_total_merge_requests(project_id):
         logger.error(f"Error fetching total number of merge requests: {str(error)}")
         raise
 
-def get_all_contributors(project_id):
+def get_all_contributors(project_id, repository_url):
     """
     Fetches all contributors from merge requests with their participation details
     :param project_id: ID of the GitLab project
+    :param repository_url: URL of the GitLab repository
     :return: Tuple of (List of contributors with participation details, Estimated total time in seconds)
     """
     logger.info(f"Fetching all contributors with participation details for project ID: {project_id}")
@@ -248,7 +263,7 @@ def get_all_contributors(project_id):
         total_time = 0
         start_time = time.time()
 
-        total_mrs = get_total_merge_requests(project_id)
+        total_mrs = get_total_merge_requests(project_id, repository_url)
         
         while True:
             response = requests.get(
