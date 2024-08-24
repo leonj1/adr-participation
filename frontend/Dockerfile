@@ -7,11 +7,17 @@ WORKDIR /app
 # Copy package.json and package-lock.json
 COPY package*.json ./
 
+# Copy package.json and package-lock.json
+COPY package*.json ./
+
 # Install dependencies
 RUN npm install
 
 # Copy the rest of the application code
 COPY . .
+
+# Install any new dependencies that might have been added
+RUN npm install
 
 # Set the REACT_APP_BACKEND_URL environment variable
 ARG REACT_APP_BACKEND_URL
