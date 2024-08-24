@@ -125,7 +125,7 @@ async def get_total_merge_requests_endpoint():
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/open-merge-requests-count")
-async def get_open_merge_requests_count():
+async def get_open_merge_requests_count_endpoint():
     """
     Get the count of open merge requests for the repository
     """
