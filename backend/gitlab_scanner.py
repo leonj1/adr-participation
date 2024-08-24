@@ -18,14 +18,13 @@ def get_project_id():
     logger.info(f"Attempting to get project ID for repository: {REPOSITORY_URL}")
     return _get_project_details()['id']
 
-def get_repo_name():
+def get_repo_url():
     """
-    Determines the repository name based on the REPOSITORY_URL
-    :return: Repository name
-    :raises: Exception if there's an error fetching project details
+    Returns the REPOSITORY_URL
+    :return: Repository URL
     """
-    logger.info(f"Attempting to get repository name for: {REPOSITORY_URL}")
-    return _get_project_details()['name']
+    logger.info(f"Returning repository URL: {REPOSITORY_URL}")
+    return REPOSITORY_URL
 
 def _get_project_details():
     """

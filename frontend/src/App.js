@@ -11,18 +11,18 @@ function App() {
   const [participantsLoading, setParticipantsLoading] = useState(false);
   const [totalMRs, setTotalMRs] = useState(10);
   const [maxAge, setMaxAge] = useState(30);
-  const [repoName, setRepoName] = useState('');
+  const [repoUrl, setRepoUrl] = useState('');
 
   useEffect(() => {
-    fetchRepoName();
+    fetchRepoUrl();
   }, []);
 
-  const fetchRepoName = async () => {
+  const fetchRepoUrl = async () => {
     try {
-      const response = await axios.get(`${BACKEND_URL}/api/repo-name`);
-      setRepoName(response.data.repo_name);
+      const response = await axios.get(`${BACKEND_URL}/api/repo-url`);
+      setRepoUrl(response.data.repo_url);
     } catch (error) {
-      console.error('Error fetching repository name:', error);
+      console.error('Error fetching repository URL:', error);
     }
   };
 
@@ -62,7 +62,7 @@ function App() {
         GitLab Merge Request Scanner
       </Typography>
       <Typography variant="h6" component="h2" gutterBottom>
-        REPO: {repoName}
+        REPO: {repoUrl}
       </Typography>
       <TextField
         type="number"

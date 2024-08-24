@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_name
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url
 
 # Set up logging
 logging.basicConfig(
@@ -75,16 +75,16 @@ async def get_merge_requests_participants(total: int = Query(10, ge=1), max_age:
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
-@app.get("/api/repo-name")
-async def get_repository_name():
+@app.get("/api/repo-url")
+async def get_repository_url():
     """
-    Get the repository name
+    Get the repository URL
     """
     try:
-        repo_name = get_repo_name()
-        return {"repo_name": repo_name}
+        repo_url = get_repo_url()
+        return {"repo_url": repo_url}
     except Exception as error:
-        logger.error(f"Error in get_repository_name: {str(error)}")
+        logger.error(f"Error in get_repository_url: {str(error)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 if __name__ == "__main__":
