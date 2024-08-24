@@ -1,37 +1,40 @@
 import os
-from flask import Flask, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from gitlab_scanner import scan_gitlab_repository
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI(
+    title="GitLab Merge Request Scanner",
+    description="API for scanning GitLab merge requests",
+    version="1.0.0",
+)
 
-@app.route('/api/merge-requests', methods=['GET'])
-def get_merge_requests():
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
+
+@app.get("/api/merge-requests")
+async def get_merge_requests():
     """
     Get all merge requests
-    ---
-    responses:
-      200:
-        description: A list of merge requests
-      401:
-        description: Unauthorized. Please check your GitLab token.
-      404:
-        description: Project not found. Please check your PROJECT_ID.
-      500:
-        description: Internal Server Error
     """
     try:
         merge_requests = scan_gitlab_repository()
-        return jsonify(merge_requests)
+        return merge_requests
     except Exception as error:
         if 'Unauthorized' in str(error):
-            return jsonify({'error': 'Unauthorized. Please check your GitLab token.'}), 401
+            raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):
-            return jsonify({'error': 'Project not found. Please check your PROJECT_ID.'}), 404
+            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
         else:
-            return jsonify({'error': 'Internal Server Error', 'message': str(error)}), 500
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 5000))
+    uvicorn.run("app:app", host="0.0.0.0", port=port, reload=True)
