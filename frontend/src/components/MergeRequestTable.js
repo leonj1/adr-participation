@@ -25,7 +25,7 @@ function MergeRequestTable({ mergeRequests }) {
           {mergeRequests.map((mr) => (
             <TableRow key={mr.id}>
               <TableCell>{calculateDaysOpen(mr.created_at)}</TableCell>
-              <TableCell>{mr.participants.length}</TableCell>
+              <TableCell>{mr.participants ? mr.participants.length : 'N/A'}</TableCell>
               <TableCell>{mr.iid}</TableCell>
               <TableCell>
                 <Link href={mr.web_url} target="_blank" rel="noopener noreferrer">
