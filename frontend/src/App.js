@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Container, Typography, CircularProgress, Button } from '@material-ui/core';
-import MergeRequestList from './components/MergeRequestList';
+import { Container, Typography, CircularProgress } from '@material-ui/core';
+import MergeRequestTable from './components/MergeRequestTable';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -8,17 +8,13 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 function App() {
   const [mergeRequests, setMergeRequests] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showHello, setShowHello] = useState(false);
-
-  const toggleHello = () => {
-    setShowHello(!showHello);
-  };
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(`${BACKEND_URL}/api/merge-requests`);
-        setMergeRequests(response.data);
+        const response = await axios.get(`${BACKEND_URL}/api/merge-requests-with-participants`);
+        const sortedMergeRequests = response.data.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setMergeRequests(sortedMergeRequests);
         setLoading(false);
       } catch (error) {
         console.error('Error fetching merge requests:', error);
@@ -34,21 +30,10 @@ function App() {
       <Typography variant="h4" component="h1" gutterBottom>
         GitLab Merge Request Scanner
       </Typography>
-      <Typography variant="subtitle1" gutterBottom>
-        Displaying up to 10 open and 10 closed merge requests
-      </Typography>
-      <Button variant="contained" color="primary" onClick={toggleHello} style={{ marginBottom: '20px' }}>
-        Toggle Hello World
-      </Button>
-      {showHello && (
-        <Typography variant="h6" gutterBottom>
-          Hello World!
-        </Typography>
-      )}
       {loading ? (
         <CircularProgress />
       ) : (
-        <MergeRequestList mergeRequests={mergeRequests} />
+        <MergeRequestTable mergeRequests={mergeRequests} />
       )}
     </Container>
   );
