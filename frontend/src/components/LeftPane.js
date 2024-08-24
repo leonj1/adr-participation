@@ -12,13 +12,12 @@ function LeftPane({ isOpen, toggleDrawer, width = 240 }) {
         style: { width: `${width}px`, marginTop: '64px' }
       }}
     >
-        <List>
-          <ListItem button onClick={toggleDrawer}>
-            <ListItemText primary="Merge Requests" />
-          </ListItem>
-        </List>
-      </Drawer>
-    </>
+      <List>
+        <ListItem button onClick={toggleDrawer}>
+          <ListItemText primary="Merge Requests" />
+        </ListItem>
+      </List>
+    </Drawer>
   );
 }
 
