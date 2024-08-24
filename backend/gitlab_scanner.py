@@ -47,7 +47,7 @@ def get_project_id():
 def scan_gitlab_repository():
     """
     Scans the GitLab repository for merge requests
-    :return: List of merge requests
+    :return: List of merge requests (10 open and 10 closed)
     :raises: Exception if there's an error fetching merge requests
     """
     logger.info("Starting GitLab repository scan")
@@ -57,8 +57,8 @@ def scan_gitlab_repository():
 
     try:
         project_id = get_project_id()
-        open_mrs = fetch_merge_requests('opened', project_id)
-        closed_mrs = fetch_merge_requests('closed', project_id)
+        open_mrs = fetch_merge_requests('opened', project_id, 10)
+        closed_mrs = fetch_merge_requests('closed', project_id, 10)
         total_mrs = len(open_mrs) + len(closed_mrs)
         logger.info(f"Scan complete. Retrieved {total_mrs} merge requests")
         return open_mrs + closed_mrs
@@ -66,20 +66,21 @@ def scan_gitlab_repository():
         logger.error(f'Error scanning GitLab repository: {error}')
         raise
 
-def fetch_merge_requests(state, project_id):
+def fetch_merge_requests(state, project_id, limit=10):
     """
     Fetches merge requests from GitLab API
     :param state: State of merge requests to fetch ('opened' or 'closed')
     :param project_id: ID of the GitLab project
+    :param limit: Maximum number of merge requests to fetch
     :return: List of merge requests
     :raises: Exception if there's an error fetching merge requests
     """
-    logger.info(f"Fetching {state} merge requests for project ID: {project_id}")
+    logger.info(f"Fetching {limit} {state} merge requests for project ID: {project_id}")
     try:
         response = requests.get(
             f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
             headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
-            params={'state': state, 'per_page': 100}
+            params={'state': state, 'per_page': limit}
         )
         response.raise_for_status()
         merge_requests = response.json()

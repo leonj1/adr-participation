@@ -34,6 +34,9 @@ function App() {
       <Typography variant="h4" component="h1" gutterBottom>
         GitLab Merge Request Scanner
       </Typography>
+      <Typography variant="subtitle1" gutterBottom>
+        Displaying up to 10 open and 10 closed merge requests
+      </Typography>
       <Button variant="contained" color="primary" onClick={toggleHello} style={{ marginBottom: '20px' }}>
         Toggle Hello World
       </Button>
