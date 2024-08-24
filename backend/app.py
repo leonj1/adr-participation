@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors
 
 # Set up logging
 logging.basicConfig(
@@ -86,6 +86,24 @@ async def get_repository_url():
     except Exception as error:
         logger.error(f"Error in get_repository_url: {str(error)}")
         raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
+@app.get("/api/contributors")
+async def get_contributors():
+    """
+    Get all contributors
+    """
+    try:
+        project_id = get_project_id()
+        contributors = get_all_contributors(project_id)
+        return {"contributors": contributors}
+    except Exception as error:
+        logger.error(f"Error in get_contributors: {str(error)}")
+        if 'Unauthorized' in str(error):
+            raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
+        elif 'Project not found' in str(error):
+            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 if __name__ == "__main__":
     import uvicorn

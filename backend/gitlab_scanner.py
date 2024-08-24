@@ -211,3 +211,37 @@ def get_merge_requests_with_participants(project_id, total, max_age):
     except Exception as error:
         logger.error(f'Error fetching merge requests with participants: {error}')
         raise
+
+def get_all_contributors(project_id):
+    """
+    Fetches all contributors from merge requests
+    :param project_id: ID of the GitLab project
+    :return: List of unique contributors
+    """
+    logger.info(f"Fetching all contributors for project ID: {project_id}")
+    try:
+        all_contributors = set()
+        page = 1
+        while True:
+            response = requests.get(
+                f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
+                headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
+                params={'page': page, 'per_page': 100, 'state': 'all'}
+            )
+            response.raise_for_status()
+            merge_requests = response.json()
+            if not merge_requests:
+                break
+
+            for mr in merge_requests:
+                all_contributors.add(mr['author']['username'])
+                participants = fetch_merge_request_participants(project_id, mr['iid'])
+                all_contributors.update(participants)
+
+            page += 1
+
+        logger.info(f"Successfully fetched {len(all_contributors)} contributors")
+        return list(all_contributors)
+    except Exception as error:
+        logger.error(f'Error fetching all contributors: {error}')
+        raise

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, CircularProgress, Button, TextField, AppBar, Toolbar, IconButton } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
+import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 import MergeRequestTable from './components/MergeRequestTable';
+import Contributors from './components/Contributors';
 import LeftPane from './components/LeftPane';
 import axios from 'axios';
 
@@ -64,7 +66,7 @@ function App() {
   };
 
   return (
-    <>
+    <Router>
       <AppBar position="fixed">
         <Toolbar>
           <IconButton edge="start" color="inherit" aria-label="menu" onClick={toggleLeftPane}>
@@ -77,48 +79,55 @@ function App() {
       </AppBar>
       <LeftPane isOpen={isLeftPaneOpen} toggleDrawer={toggleLeftPane} />
       <Container style={{ marginTop: '80px', marginLeft: isLeftPaneOpen ? '240px' : '0', transition: 'margin-left 0.3s' }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          GitLab Merge Request Scanner
-        </Typography>
-        <Typography variant="h6" component="h2" gutterBottom>
-          REPO: {repoUrl}
-        </Typography>
-        <TextField
-          type="number"
-          label="Total MRs"
-          value={totalMRs}
-          onChange={(e) => setTotalMRs(Math.max(1, parseInt(e.target.value) || 1))}
-          style={{ marginRight: '20px' }}
-        />
-        <TextField
-          type="number"
-          label="Max Age (days)"
-          value={maxAge}
-          onChange={(e) => setMaxAge(Math.max(1, parseInt(e.target.value) || 1))}
-          style={{ marginRight: '20px' }}
-        />
-        <Button 
-          variant="contained" 
-          color="primary" 
-          onClick={fetchMergeRequests}
-          disabled={loading}
-          style={{ marginRight: '20px' }}
-        >
-          {loading ? 'Loading...' : 'Fetch MRs'}
-        </Button>
-        <Button 
-          variant="contained" 
-          color="secondary" 
-          onClick={fetchParticipants} 
-          disabled={participantsLoading}
-        >
-          {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
-        </Button>
-        {mergeRequests.length > 0 && (
-          <MergeRequestTable mergeRequests={mergeRequests} />
-        )}
+        <Switch>
+          <Route exact path="/">
+            <Typography variant="h4" component="h1" gutterBottom>
+              GitLab Merge Request Scanner
+            </Typography>
+            <Typography variant="h6" component="h2" gutterBottom>
+              REPO: {repoUrl}
+            </Typography>
+            <TextField
+              type="number"
+              label="Total MRs"
+              value={totalMRs}
+              onChange={(e) => setTotalMRs(Math.max(1, parseInt(e.target.value) || 1))}
+              style={{ marginRight: '20px' }}
+            />
+            <TextField
+              type="number"
+              label="Max Age (days)"
+              value={maxAge}
+              onChange={(e) => setMaxAge(Math.max(1, parseInt(e.target.value) || 1))}
+              style={{ marginRight: '20px' }}
+            />
+            <Button 
+              variant="contained" 
+              color="primary" 
+              onClick={fetchMergeRequests}
+              disabled={loading}
+              style={{ marginRight: '20px' }}
+            >
+              {loading ? 'Loading...' : 'Fetch MRs'}
+            </Button>
+            <Button 
+              variant="contained" 
+              color="secondary" 
+              onClick={fetchParticipants} 
+              disabled={participantsLoading}
+            >
+              {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
+            </Button>
+            {mergeRequests.length > 0 && (
+              <MergeRequestTable mergeRequests={mergeRequests} />
+            )}
+          </Route>
+          <Route path="/contributors">
+            <Contributors />
+          </Route>
+        </Switch>
       </Container>
-    </>
+    </Router>
   );
 }
 
