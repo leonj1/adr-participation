@@ -105,6 +105,24 @@ async def get_contributors():
         else:
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
+@app.get("/api/total-merge-requests")
+async def get_total_merge_requests():
+    """
+    Get the total number of merge requests for the repository
+    """
+    try:
+        project_id = get_project_id()
+        total_mrs = gitlab_scanner.get_total_merge_requests(project_id)
+        return {"total_merge_requests": total_mrs}
+    except Exception as error:
+        logger.error(f"Error in get_total_merge_requests: {str(error)}")
+        if 'Unauthorized' in str(error):
+            raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
+        elif 'Project not found' in str(error):
+            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
 if __name__ == "__main__":
     import uvicorn
     port = int(os.environ.get("PORT", 9002))
