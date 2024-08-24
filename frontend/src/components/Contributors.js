@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
+import { Button, Typography, LinearProgress, Paper, Grid, CircularProgress } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
 import { formatDuration, intervalToDuration } from 'date-fns';
@@ -36,24 +36,28 @@ function Contributors({ repoUrl }) {
   const [estimatedTime, setEstimatedTime] = useState(0);
   const [remainingTime, setRemainingTime] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [fetchingMRs, setFetchingMRs] = useState(false);
 
   const fetchTotalMRs = async () => {
+    setFetchingMRs(true);
     try {
       const response = await axios.get(`${BACKEND_URL}/api/total-merge-requests`, {
         params: { repository_url: repoUrl }
       });
       setTotalMRs(response.data.total_merge_requests);
-      setEstimatedTime(response.data.estimated_time);
-      setRemainingTime(response.data.estimated_time);
+      const estimatedSeconds = response.data.total_merge_requests * 1.5;
+      setEstimatedTime(estimatedSeconds);
+      setRemainingTime(estimatedSeconds);
     } catch (error) {
       console.error('Error fetching total MRs:', error);
+    } finally {
+      setFetchingMRs(false);
     }
   };
 
   const fetchContributors = async () => {
     setLoading(true);
     try {
-      await fetchTotalMRs();
       const response = await axios.get(`${BACKEND_URL}/api/contributors`, {
         params: { repository_url: repoUrl }
       });
@@ -65,6 +69,10 @@ function Contributors({ repoUrl }) {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchTotalMRs();
+  }, []);
 
   useEffect(() => {
     let timer;
@@ -171,15 +179,27 @@ function Contributors({ repoUrl }) {
       <Typography variant="h4" component="h2" gutterBottom>
         Contributors
       </Typography>
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={fetchContributors}
-        disabled={loading}
-        style={{ marginBottom: '20px' }}
-      >
-        {loading ? 'Loading...' : 'Refresh Contributors'}
-      </Button>
+      {fetchingMRs ? (
+        <CircularProgress />
+      ) : (
+        <>
+          <Typography variant="body1" gutterBottom>
+            Total Merge Requests: {totalMRs}
+          </Typography>
+          <Typography variant="body1" gutterBottom>
+            Estimated processing time: {formatTime(estimatedTime)}
+          </Typography>
+          <Button 
+            variant="contained" 
+            color="primary" 
+            onClick={fetchContributors}
+            disabled={loading}
+            style={{ marginBottom: '20px' }}
+          >
+            {loading ? 'Loading...' : 'Fetch Contributors'}
+          </Button>
+        </>
+      )}
       {loading && (
         <div style={{ marginTop: '20px', marginBottom: '20px' }}>
           <Typography variant="body1" style={{ marginBottom: '10px' }}>
