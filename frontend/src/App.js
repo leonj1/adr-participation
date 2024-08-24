@@ -148,14 +148,8 @@ function App() {
             >
               {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
             </Button>
-            {mergeRequests.length > 0 ? (
+            {mergeRequests.length > 0 && (
               <MergeRequestTable mergeRequests={mergeRequests} />
-            ) : (
-              <Box display="flex" flexDirection="column" alignItems="center" mt={4}>
-                <Typography variant="h6">
-                  No open merge requests. Time for a coffee break!
-                </Typography>
-              </Box>
             )}
           </Route>
           <Route path="/contributors">
