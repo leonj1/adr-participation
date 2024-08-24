@@ -314,3 +314,24 @@ def get_all_contributors(project_id):
     except Exception as error:
         logger.error(f'Error fetching contributors with participation details: {error}')
         raise
+
+def get_open_merge_requests_count(project_id):
+    """
+    Fetches the count of open merge requests for the project
+    :param project_id: ID of the GitLab project
+    :return: Count of open merge requests
+    """
+    logger.info(f"Fetching count of open merge requests for project ID: {project_id}")
+    try:
+        response = requests.get(
+            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
+            headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
+            params={'state': 'opened', 'per_page': 1}
+        )
+        response.raise_for_status()
+        open_mrs_count = int(response.headers.get('X-Total', 0))
+        logger.info(f"Successfully fetched count of open merge requests: {open_mrs_count}")
+        return open_mrs_count
+    except requests.exceptions.RequestException as error:
+        logger.error(f"Error fetching count of open merge requests: {str(error)}")
+        raise

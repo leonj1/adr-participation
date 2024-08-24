@@ -2,7 +2,7 @@ import os
 import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors, get_total_merge_requests
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors, get_total_merge_requests, get_open_merge_requests_count
 
 # Set up logging
 logging.basicConfig(
@@ -117,6 +117,24 @@ async def get_total_merge_requests_endpoint():
         return {"total_merge_requests": total_mrs, "estimated_time": estimated_time}
     except Exception as error:
         logger.error(f"Error in get_total_merge_requests_endpoint: {str(error)}")
+        if 'Unauthorized' in str(error):
+            raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
+        elif 'Project not found' in str(error):
+            raise HTTPException(status_code=404, detail="Project not found. Please check your REPOSITORY_URL.")
+        else:
+            raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
+
+@app.get("/api/open-merge-requests-count")
+async def get_open_merge_requests_count_endpoint():
+    """
+    Get the count of open merge requests for the repository
+    """
+    try:
+        project_id = get_project_id()
+        open_mrs_count = get_open_merge_requests_count(project_id)
+        return {"open_merge_requests_count": open_mrs_count}
+    except Exception as error:
+        logger.error(f"Error in get_open_merge_requests_count: {str(error)}")
         if 'Unauthorized' in str(error):
             raise HTTPException(status_code=401, detail="Unauthorized. Please check your GitLab token.")
         elif 'Project not found' in str(error):

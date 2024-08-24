@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
-import { formatDistanceToNow, formatDuration, intervalToDuration } from 'date-fns';
+import { formatDuration, intervalToDuration } from 'date-fns';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -90,88 +90,52 @@ function Contributors() {
     prepareOpenedMRsChart(contributorsData);
   };
 
-  const prepareTotalContributions = (contributorsData) => {
-    const sortedData = contributorsData.map(c => ({
-      username: c.username,
-      total: c.opened + c.committed + c.commented + c.reacted
-    })).sort((a, b) => b.total - a.total);
-
+  const prepareDataset = (contributorsData, keyOrFunction, label, color) => {
+    const getValue = typeof keyOrFunction === 'function' ? keyOrFunction : c => c[keyOrFunction];
+    const filteredData = contributorsData.filter(c => getValue(c) > 0);
+    const sortedData = [...filteredData].sort((a, b) => getValue(b) - getValue(a));
     const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.total);
+    const data = sortedData.map(getValue);
     const maxValue = Math.max(...data);
 
-    setTotalContributions({
+    return {
       labels,
       datasets: [{
-        label: 'Total Contributions',
+        label,
         data,
-        backgroundColor: data.map(value => `rgba(75, 192, 192, ${value / maxValue})`),
+        backgroundColor: data.map(value => `${color}${value / maxValue})`),
       }]
-    });
+    };
+  };
+
+  const prepareTotalContributions = (contributorsData) => {
+    const chartData = prepareDataset(
+      contributorsData,
+      c => c.opened + c.committed + c.commented + c.reacted,
+      'Total Contributions',
+      'rgba(75, 192, 192, '
+    );
+    setTotalContributions(chartData);
   };
 
   const prepareReactionsChart = (contributorsData) => {
-    const sortedData = [...contributorsData].sort((a, b) => b.reacted - a.reacted);
-    const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.reacted);
-    const maxValue = Math.max(...data);
-
-    setReactionsChart({
-      labels,
-      datasets: [{
-        label: 'Reactions',
-        data,
-        backgroundColor: data.map(value => `rgba(255, 206, 86, ${value / maxValue})`),
-      }]
-    });
+    const chartData = prepareDataset(contributorsData, 'reacted', 'Reactions', 'rgba(255, 206, 86, ');
+    setReactionsChart(chartData);
   };
 
   const prepareCommentsChart = (contributorsData) => {
-    const sortedData = [...contributorsData].sort((a, b) => b.commented - a.commented);
-    const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.commented);
-    const maxValue = Math.max(...data);
-
-    setCommentsChart({
-      labels,
-      datasets: [{
-        label: 'Comments',
-        data,
-        backgroundColor: data.map(value => `rgba(54, 162, 235, ${value / maxValue})`),
-      }]
-    });
+    const chartData = prepareDataset(contributorsData, 'commented', 'Comments', 'rgba(54, 162, 235, ');
+    setCommentsChart(chartData);
   };
 
   const prepareCommitsChart = (contributorsData) => {
-    const sortedData = [...contributorsData].sort((a, b) => b.committed - a.committed);
-    const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.committed);
-    const maxValue = Math.max(...data);
-
-    setCommitsChart({
-      labels,
-      datasets: [{
-        label: 'Commits',
-        data,
-        backgroundColor: data.map(value => `rgba(255, 99, 132, ${value / maxValue})`),
-      }]
-    });
+    const chartData = prepareDataset(contributorsData, 'committed', 'Commits', 'rgba(255, 99, 132, ');
+    setCommitsChart(chartData);
   };
 
   const prepareOpenedMRsChart = (contributorsData) => {
-    const sortedData = [...contributorsData].sort((a, b) => b.opened - a.opened);
-    const labels = sortedData.map(c => c.username);
-    const data = sortedData.map(c => c.opened);
-    const maxValue = Math.max(...data);
-
-    setOpenedMRsChart({
-      labels,
-      datasets: [{
-        label: 'Opened MRs',
-        data,
-        backgroundColor: data.map(value => `rgba(153, 102, 255, ${value / maxValue})`),
-      }]
-    });
+    const chartData = prepareDataset(contributorsData, 'opened', 'Opened MRs', 'rgba(153, 102, 255, ');
+    setOpenedMRsChart(chartData);
   };
 
   useEffect(() => {
