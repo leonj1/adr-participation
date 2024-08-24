@@ -27,11 +27,11 @@ const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 function Contributors() {
   const [contributors, setContributors] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [totalContributions, setTotalContributions] = useState(null);
-  const [reactionsChart, setReactionsChart] = useState(null);
-  const [commentsChart, setCommentsChart] = useState(null);
-  const [commitsChart, setCommitsChart] = useState(null);
-  const [openedMRsChart, setOpenedMRsChart] = useState(null);
+  const [totalContributions, setTotalContributions] = useState({ labels: [], datasets: [] });
+  const [reactionsChart, setReactionsChart] = useState({ labels: [], datasets: [] });
+  const [commentsChart, setCommentsChart] = useState({ labels: [], datasets: [] });
+  const [commitsChart, setCommitsChart] = useState({ labels: [], datasets: [] });
+  const [openedMRsChart, setOpenedMRsChart] = useState({ labels: [], datasets: [] });
   const [estimatedTime, setEstimatedTime] = useState(null);
   const [remainingTime, setRemainingTime] = useState(null);
 
@@ -198,33 +198,41 @@ function Contributors() {
           </Typography>
         </div>
       )}
-      {totalContributions && (
+      {totalContributions.labels.length > 0 && (
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Paper style={{ padding: '20px', marginTop: '20px' }}>
               <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Total Contributions'}}}} data={totalContributions} />
             </Paper>
           </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper style={{ padding: '20px', marginTop: '20px' }}>
-              <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Reactions'}}}} data={reactionsChart} />
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper style={{ padding: '20px', marginTop: '20px' }}>
-              <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Comments'}}}} data={commentsChart} />
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper style={{ padding: '20px', marginTop: '20px' }}>
-              <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Commits'}}}} data={commitsChart} />
-            </Paper>
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <Paper style={{ padding: '20px', marginTop: '20px' }}>
-              <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Opened MRs'}}}} data={openedMRsChart} />
-            </Paper>
-          </Grid>
+          {reactionsChart.labels.length > 0 && (
+            <Grid item xs={12} md={6}>
+              <Paper style={{ padding: '20px', marginTop: '20px' }}>
+                <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Reactions'}}}} data={reactionsChart} />
+              </Paper>
+            </Grid>
+          )}
+          {commentsChart.labels.length > 0 && (
+            <Grid item xs={12} md={6}>
+              <Paper style={{ padding: '20px', marginTop: '20px' }}>
+                <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Comments'}}}} data={commentsChart} />
+              </Paper>
+            </Grid>
+          )}
+          {commitsChart.labels.length > 0 && (
+            <Grid item xs={12} md={6}>
+              <Paper style={{ padding: '20px', marginTop: '20px' }}>
+                <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Commits'}}}} data={commitsChart} />
+              </Paper>
+            </Grid>
+          )}
+          {openedMRsChart.labels.length > 0 && (
+            <Grid item xs={12} md={6}>
+              <Paper style={{ padding: '20px', marginTop: '20px' }}>
+                <Bar options={{...options, plugins: {...options.plugins, title: {...options.plugins.title, text: 'Opened MRs'}}}} data={openedMRsChart} />
+              </Paper>
+            </Grid>
+          )}
         </Grid>
       )}
     </div>
