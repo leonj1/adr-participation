@@ -137,14 +137,21 @@ async def get_total_merge_requests_endpoint(repository_url: str = Query(...)):
             raise HTTPException(status_code=500, detail=f"Internal Server Error: {str(error)}")
 
 @app.get("/api/open-merge-requests-count")
-async def get_open_merge_requests_count_endpoint(repository_url: str = Query(...)):
+async def get_open_merge_requests_count_endpoint(repository_url: str = Query(None)):
     """
     Get the count of open merge requests for the repository
     """
     try:
+        if not repository_url:
+            repository_url = get_repo_url()
+        if not repository_url:
+            raise ValueError("repository_url is not set")
         project_id = get_project_id(repository_url)
-        open_mrs_count = get_open_merge_requests_count(project_id, repository_url)
+        open_mrs_count = get_open_merge_requests_count(project_id)
         return {"open_merge_requests_count": open_mrs_count}
+    except ValueError as ve:
+        logger.error(f"Error in get_open_merge_requests_count: {str(ve)}")
+        raise HTTPException(status_code=400, detail=str(ve))
     except Exception as error:
         logger.error(f"Error in get_open_merge_requests_count: {str(error)}")
         if 'Unauthorized' in str(error):

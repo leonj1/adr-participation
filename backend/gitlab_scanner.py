@@ -89,8 +89,8 @@ def scan_gitlab_repository(total, max_age, repository_url):
 
     try:
         project_id = get_project_id(repository_url)
-        open_mrs = fetch_merge_requests('opened', project_id, total, max_age)
-        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age)
+        open_mrs = fetch_merge_requests('opened', project_id, total, max_age, repository_url)
+        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age, repository_url)
         all_mrs = open_mrs + closed_mrs
         all_mrs.sort(key=lambda x: x['created_at'], reverse=True)
         total_mrs = min(len(all_mrs), total)
@@ -203,17 +203,18 @@ def fetch_merge_request_participants(project_id, merge_request_iid):
         logger.error(f"Error fetching participants for merge request {merge_request_iid}: {str(error)}")
         raise
 
-def get_merge_requests_with_participants(project_id, total, max_age):
+def get_merge_requests_with_participants(project_id, total, max_age, repository_url):
     """
     Fetches merge requests with their participants
     :param project_id: ID of the GitLab project
     :param total: Maximum number of merge requests to fetch
     :param max_age: Maximum age of merge requests in days
+    :param repository_url: URL of the GitLab repository
     :return: List of merge requests with participants
     """
     logger.info(f"Fetching merge requests with participants for project ID: {project_id}")
     try:
-        all_mrs = scan_gitlab_repository(total, max_age)
+        all_mrs = scan_gitlab_repository(total, max_age, repository_url)
 
         for mr in all_mrs:
             mr['participants'] = fetch_merge_request_participants(project_id, mr['iid'])
@@ -226,10 +227,11 @@ def get_merge_requests_with_participants(project_id, total, max_age):
 
 import time
 
-def get_total_merge_requests(project_id):
+def get_total_merge_requests(project_id, repository_url):
     """
     Fetches the total number of merge requests for the project
     :param project_id: ID of the GitLab project
+    :param repository_url: URL of the GitLab repository
     :return: Total number of merge requests
     """
     logger.info(f"Fetching total number of merge requests for project ID: {project_id}")
@@ -247,10 +249,11 @@ def get_total_merge_requests(project_id):
         logger.error(f"Error fetching total number of merge requests: {str(error)}")
         raise
 
-def get_all_contributors(project_id):
+def get_all_contributors(project_id, repository_url):
     """
     Fetches all contributors from merge requests with their participation details
     :param project_id: ID of the GitLab project
+    :param repository_url: URL of the GitLab repository
     :return: Tuple of (List of contributors with participation details, Estimated total time in seconds)
     """
     logger.info(f"Fetching all contributors with participation details for project ID: {project_id}")
@@ -260,7 +263,7 @@ def get_all_contributors(project_id):
         total_time = 0
         start_time = time.time()
 
-        total_mrs = get_total_merge_requests(project_id)
+        total_mrs = get_total_merge_requests(project_id, repository_url)
         
         while True:
             response = requests.get(
