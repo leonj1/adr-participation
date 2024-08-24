@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button, Typography, LinearProgress, Paper, Grid } from '@material-ui/core';
 import { Bar } from 'react-chartjs-2';
 import axios from 'axios';
-import { formatDistanceToNow, formatDuration, intervalToDuration } from 'date-fns';
+import { formatDuration, intervalToDuration } from 'date-fns';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -82,7 +82,15 @@ function Contributors() {
     return formatDuration(duration, { format: ['hours', 'minutes', 'seconds'] });
   };
 
-  const prepareChartData = (contributorsData, keyOrFunction, label, color) => {
+  const prepareChartData = (contributorsData) => {
+    prepareTotalContributions(contributorsData);
+    prepareReactionsChart(contributorsData);
+    prepareCommentsChart(contributorsData);
+    prepareCommitsChart(contributorsData);
+    prepareOpenedMRsChart(contributorsData);
+  };
+
+  const prepareDataset = (contributorsData, keyOrFunction, label, color) => {
     const getValue = typeof keyOrFunction === 'function' ? keyOrFunction : c => c[keyOrFunction];
     const filteredData = contributorsData.filter(c => getValue(c) > 0);
     const sortedData = [...filteredData].sort((a, b) => getValue(b) - getValue(a));
@@ -101,7 +109,7 @@ function Contributors() {
   };
 
   const prepareTotalContributions = (contributorsData) => {
-    const chartData = prepareChartData(
+    const chartData = prepareDataset(
       contributorsData,
       c => c.opened + c.committed + c.commented + c.reacted,
       'Total Contributions',
@@ -111,22 +119,22 @@ function Contributors() {
   };
 
   const prepareReactionsChart = (contributorsData) => {
-    const chartData = prepareChartData(contributorsData, 'reacted', 'Reactions', 'rgba(255, 206, 86, ');
+    const chartData = prepareDataset(contributorsData, 'reacted', 'Reactions', 'rgba(255, 206, 86, ');
     setReactionsChart(chartData);
   };
 
   const prepareCommentsChart = (contributorsData) => {
-    const chartData = prepareChartData(contributorsData, 'commented', 'Comments', 'rgba(54, 162, 235, ');
+    const chartData = prepareDataset(contributorsData, 'commented', 'Comments', 'rgba(54, 162, 235, ');
     setCommentsChart(chartData);
   };
 
   const prepareCommitsChart = (contributorsData) => {
-    const chartData = prepareChartData(contributorsData, 'committed', 'Commits', 'rgba(255, 99, 132, ');
+    const chartData = prepareDataset(contributorsData, 'committed', 'Commits', 'rgba(255, 99, 132, ');
     setCommitsChart(chartData);
   };
 
   const prepareOpenedMRsChart = (contributorsData) => {
-    const chartData = prepareChartData(contributorsData, 'opened', 'Opened MRs', 'rgba(153, 102, 255, ');
+    const chartData = prepareDataset(contributorsData, 'opened', 'Opened MRs', 'rgba(153, 102, 255, ');
     setOpenedMRsChart(chartData);
   };
 
