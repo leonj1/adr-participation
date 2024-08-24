@@ -1,8 +1,8 @@
 import os
 import logging
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, get_all_contributors, get_total_merge_requests, get_open_merge_requests_count
+from gitlab_scanner import REPOSITORY_URL, GITLAB_TOKEN, get_project_id, scan_gitlab_repository, get_merge_requests_with_participants, get_repo_url, set_repo_url, get_all_contributors, get_total_merge_requests, get_open_merge_requests_count
 
 # Set up logging
 logging.basicConfig(
