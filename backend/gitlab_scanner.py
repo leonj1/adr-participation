@@ -191,17 +191,17 @@ def fetch_merge_request_participants(project_id, merge_request_iid):
         logger.error(f"Error fetching participants for merge request {merge_request_iid}: {str(error)}")
         raise
 
-def get_merge_requests_with_participants(project_id):
+def get_merge_requests_with_participants(project_id, total, max_age):
     """
-    Fetches all merge requests with their participants
+    Fetches merge requests with their participants
     :param project_id: ID of the GitLab project
+    :param total: Maximum number of merge requests to fetch
+    :param max_age: Maximum age of merge requests in days
     :return: List of merge requests with participants
     """
-    logger.info(f"Fetching all merge requests with participants for project ID: {project_id}")
+    logger.info(f"Fetching merge requests with participants for project ID: {project_id}")
     try:
-        open_mrs = fetch_merge_requests('opened', project_id)
-        closed_mrs = fetch_merge_requests('closed', project_id)
-        all_mrs = open_mrs + closed_mrs
+        all_mrs = scan_gitlab_repository(total, max_age)
 
         for mr in all_mrs:
             mr['participants'] = fetch_merge_request_participants(project_id, mr['iid'])
