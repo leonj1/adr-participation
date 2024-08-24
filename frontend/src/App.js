@@ -13,7 +13,7 @@ function App() {
   const [totalMRs, setTotalMRs] = useState(10);
   const [maxAge, setMaxAge] = useState(30);
   const [repoUrl, setRepoUrl] = useState('');
-  const [isLeftPaneOpen, setIsLeftPaneOpen] = useState(false);
+  const [isLeftPaneOpen, setIsLeftPaneOpen] = useState(true);
 
   useEffect(() => {
     fetchRepoUrl();
@@ -65,7 +65,7 @@ function App() {
   return (
     <>
       <LeftPane isOpen={isLeftPaneOpen} toggleDrawer={toggleLeftPane} />
-      <Container style={{ marginTop: '60px' }}>
+      <Container style={{ marginTop: '60px', marginLeft: isLeftPaneOpen ? '240px' : '0', transition: 'margin-left 0.3s' }}>
         <Typography variant="h4" component="h1" gutterBottom>
           GitLab Merge Request Scanner
         </Typography>

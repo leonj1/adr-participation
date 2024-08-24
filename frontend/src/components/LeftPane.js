@@ -2,7 +2,7 @@ import React from 'react';
 import { Drawer, List, ListItem, ListItemText, IconButton } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 
-function LeftPane({ isOpen, toggleDrawer }) {
+function LeftPane({ isOpen, toggleDrawer, width = 240 }) {
   return (
     <>
       <IconButton
@@ -14,7 +14,15 @@ function LeftPane({ isOpen, toggleDrawer }) {
       >
         <MenuIcon />
       </IconButton>
-      <Drawer anchor="left" open={isOpen} onClose={toggleDrawer}>
+      <Drawer 
+        anchor="left" 
+        open={isOpen} 
+        onClose={toggleDrawer}
+        variant="persistent"
+        PaperProps={{
+          style: { width: `${width}px` }
+        }}
+      >
         <List>
           <ListItem button onClick={toggleDrawer}>
             <ListItemText primary="Merge Requests" />
