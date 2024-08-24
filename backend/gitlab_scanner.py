@@ -44,48 +44,71 @@ def get_project_id():
         logger.error(f"Error getting project ID: {str(error)}")
         raise
 
-def scan_gitlab_repository():
+from datetime import datetime, timedelta
+
+def scan_gitlab_repository(total, max_age):
     """
     Scans the GitLab repository for merge requests
-    :return: List of merge requests (10 open and 10 closed)
+    :param total: Maximum number of merge requests to fetch
+    :param max_age: Maximum age of merge requests in days
+    :return: List of merge requests
     :raises: Exception if there's an error fetching merge requests
     """
-    logger.info("Starting GitLab repository scan")
+    logger.info(f"Starting GitLab repository scan for {total} MRs with max age of {max_age} days")
     if not GITLAB_TOKEN:
         logger.error("GITLAB_TOKEN is not set")
         raise Exception('GITLAB_TOKEN is not set')
 
     try:
         project_id = get_project_id()
-        open_mrs = fetch_merge_requests('opened', project_id, 10)
-        closed_mrs = fetch_merge_requests('closed', project_id, 10)
-        total_mrs = len(open_mrs) + len(closed_mrs)
+        open_mrs = fetch_merge_requests('opened', project_id, total, max_age)
+        closed_mrs = fetch_merge_requests('closed', project_id, total, max_age)
+        all_mrs = open_mrs + closed_mrs
+        all_mrs.sort(key=lambda x: x['created_at'], reverse=True)
+        total_mrs = min(len(all_mrs), total)
         logger.info(f"Scan complete. Retrieved {total_mrs} merge requests")
-        return open_mrs + closed_mrs
+        return all_mrs[:total_mrs]
     except Exception as error:
         logger.error(f'Error scanning GitLab repository: {error}')
         raise
 
-def fetch_merge_requests(state, project_id, limit=10):
+def fetch_merge_requests(state, project_id, limit, max_age):
     """
     Fetches merge requests from GitLab API
     :param state: State of merge requests to fetch ('opened' or 'closed')
     :param project_id: ID of the GitLab project
     :param limit: Maximum number of merge requests to fetch
+    :param max_age: Maximum age of merge requests in days
     :return: List of merge requests
     :raises: Exception if there's an error fetching merge requests
     """
-    logger.info(f"Fetching {limit} {state} merge requests for project ID: {project_id}")
+    logger.info(f"Fetching {state} merge requests for project ID: {project_id}")
     try:
-        response = requests.get(
-            f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
-            headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
-            params={'state': state, 'per_page': limit}
-        )
-        response.raise_for_status()
-        merge_requests = response.json()
+        oldest_date = datetime.now() - timedelta(days=max_age)
+        params = {
+            'state': state,
+            'per_page': 100,  # Fetch maximum allowed per page
+            'created_after': oldest_date.isoformat()
+        }
+        merge_requests = []
+        page = 1
+
+        while len(merge_requests) < limit:
+            params['page'] = page
+            response = requests.get(
+                f'{GITLAB_API_URL}/projects/{project_id}/merge_requests',
+                headers={'PRIVATE-TOKEN': GITLAB_TOKEN},
+                params=params
+            )
+            response.raise_for_status()
+            page_mrs = response.json()
+            if not page_mrs:
+                break
+            merge_requests.extend(page_mrs)
+            page += 1
+
         logger.info(f"Successfully fetched {len(merge_requests)} {state} merge requests")
-        return merge_requests
+        return merge_requests[:limit]
     except requests.exceptions.RequestException as error:
         if error.response:
             if error.response.status_code == 401:
