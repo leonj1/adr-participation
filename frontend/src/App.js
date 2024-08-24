@@ -75,6 +75,9 @@ function App() {
           <Typography variant="h6" style={{ flexGrow: 1 }}>
             GitLab Merge Request Scanner
           </Typography>
+          <Button color="inherit" component={Link} to="/">
+            Home
+          </Button>
           <Button color="inherit" component={Link} to="/contributors">
             Contributors
           </Button>
