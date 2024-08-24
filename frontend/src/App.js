@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, CircularProgress, Button, TextField } from '@material-ui/core';
 import MergeRequestTable from './components/MergeRequestTable';
+import LeftPane from './components/LeftPane';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -12,6 +13,7 @@ function App() {
   const [totalMRs, setTotalMRs] = useState(10);
   const [maxAge, setMaxAge] = useState(30);
   const [repoUrl, setRepoUrl] = useState('');
+  const [isLeftPaneOpen, setIsLeftPaneOpen] = useState(false);
 
   useEffect(() => {
     fetchRepoUrl();
@@ -56,49 +58,56 @@ function App() {
     }
   };
 
+  const toggleLeftPane = () => {
+    setIsLeftPaneOpen(!isLeftPaneOpen);
+  };
+
   return (
-    <Container>
-      <Typography variant="h4" component="h1" gutterBottom>
-        GitLab Merge Request Scanner
-      </Typography>
-      <Typography variant="h6" component="h2" gutterBottom>
-        REPO: {repoUrl}
-      </Typography>
-      <TextField
-        type="number"
-        label="Total MRs"
-        value={totalMRs}
-        onChange={(e) => setTotalMRs(Math.max(1, parseInt(e.target.value) || 1))}
-        style={{ marginRight: '20px' }}
-      />
-      <TextField
-        type="number"
-        label="Max Age (days)"
-        value={maxAge}
-        onChange={(e) => setMaxAge(Math.max(1, parseInt(e.target.value) || 1))}
-        style={{ marginRight: '20px' }}
-      />
-      <Button 
-        variant="contained" 
-        color="primary" 
-        onClick={fetchMergeRequests}
-        disabled={loading}
-        style={{ marginRight: '20px' }}
-      >
-        {loading ? 'Loading...' : 'Fetch MRs'}
-      </Button>
-      <Button 
-        variant="contained" 
-        color="secondary" 
-        onClick={fetchParticipants} 
-        disabled={participantsLoading}
-      >
-        {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
-      </Button>
-      {mergeRequests.length > 0 && (
-        <MergeRequestTable mergeRequests={mergeRequests} />
-      )}
-    </Container>
+    <>
+      <LeftPane isOpen={isLeftPaneOpen} toggleDrawer={toggleLeftPane} />
+      <Container style={{ marginTop: '60px' }}>
+        <Typography variant="h4" component="h1" gutterBottom>
+          GitLab Merge Request Scanner
+        </Typography>
+        <Typography variant="h6" component="h2" gutterBottom>
+          REPO: {repoUrl}
+        </Typography>
+        <TextField
+          type="number"
+          label="Total MRs"
+          value={totalMRs}
+          onChange={(e) => setTotalMRs(Math.max(1, parseInt(e.target.value) || 1))}
+          style={{ marginRight: '20px' }}
+        />
+        <TextField
+          type="number"
+          label="Max Age (days)"
+          value={maxAge}
+          onChange={(e) => setMaxAge(Math.max(1, parseInt(e.target.value) || 1))}
+          style={{ marginRight: '20px' }}
+        />
+        <Button 
+          variant="contained" 
+          color="primary" 
+          onClick={fetchMergeRequests}
+          disabled={loading}
+          style={{ marginRight: '20px' }}
+        >
+          {loading ? 'Loading...' : 'Fetch MRs'}
+        </Button>
+        <Button 
+          variant="contained" 
+          color="secondary" 
+          onClick={fetchParticipants} 
+          disabled={participantsLoading}
+        >
+          {participantsLoading ? 'Loading Participants...' : 'Load Participants'}
+        </Button>
+        {mergeRequests.length > 0 && (
+          <MergeRequestTable mergeRequests={mergeRequests} />
+        )}
+      </Container>
+    </>
   );
 }
 
